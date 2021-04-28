@@ -1,6 +1,9 @@
 package projeto_compilador.parser;
 
 import projeto_compilador.scanner.Scanner;
+
+import java.io.Console;
+
 import projeto_compilador.ClasseTokens;
 import projeto_compilador.Token;
 import projeto_compilador.exceptions.ErrorSyntaxException;
@@ -54,14 +57,34 @@ public class Parser {
 			throw new ErrorSyntaxException("Abre chaves Expected");
 		}
 
-		while (token != null && isPrimaryType()) {
-			// lerDeclVariavel();
+		this.getNextToken();
+		while (isPrimaryType()) {
+			variableDeclaration();
 		}
 
-		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.FECHA_BLOCO.getClasse()) {
 			throw new ErrorSyntaxException("Fecha chaves Expected");
 		}
+	}
+
+	private void variableDeclaration() {
+		System.out.println(token);
+
+		this.getNextToken();
+		if (token.getClasse() == ClasseTokens.IDENTIFICADOR.getClasse()) {
+			System.out.println("é identificador");
+		}
+
+		while (token.getClasse() == ClasseTokens.VIRGULA.getClasse()) {
+			// repete tudo
+		}
+
+		this.getNextToken();
+		if (token.getClasse() == ClasseTokens.PONTO_VIRGULA.getClasse()) {
+			System.out.println("Ponto e virgula");
+		}
+
+		this.getNextToken();
 	}
 
 	private boolean isPrimaryType() {
