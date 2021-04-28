@@ -57,7 +57,7 @@ public class Parser {
 
 		this.getNextToken();
 		while (isPrimaryType()) {
-			variableDeclaration();
+			declareVariable();
 		}
 
 		while (this.primeiroComando()) {
@@ -70,7 +70,7 @@ public class Parser {
 		}
 	}
 
-	private void variableDeclaration() {
+	private void declareVariable() {
 		this.getNextToken();
 		if (token.getClasse() == ClasseTokens.IDENTIFICADOR.getClasse()) {
 			System.out.println("é identificador");
