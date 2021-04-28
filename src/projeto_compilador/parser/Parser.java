@@ -58,13 +58,14 @@ public class Parser {
 		this.getNextToken();
 		while (isPrimaryType()) {
 			declareVariable();
+			this.getNextToken();
 		}
 
 		while (this.primeiroComando()) {
 			this.comando();
 		}
 
-		this.getNextToken();
+		// this.getNextToken();
 		if (token.getClasse() != ClasseTokens.FECHA_BLOCO.getClasse()) {
 			throw new ErrorSyntaxException("Fecha chaves Expected");
 		}
@@ -76,16 +77,15 @@ public class Parser {
 			System.out.println("é identificador");
 		}
 
-		while (token.getClasse() == ClasseTokens.VIRGULA.getClasse()) {
-			// repete tudo
-		}
+		// this.getNextToken();
+		// while (token.getClasse() == ClasseTokens.VIRGULA.getClasse()) {
+		// // repete tudo
+		// }
 
 		this.getNextToken();
 		if (token.getClasse() == ClasseTokens.PONTO_VIRGULA.getClasse()) {
 			System.out.println("Ponto e virgula");
 		}
-
-		this.getNextToken();
 	}
 
 	private boolean isPrimaryType() {
