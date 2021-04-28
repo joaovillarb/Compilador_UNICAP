@@ -3,11 +3,11 @@ package projeto_compilador;
 public class Token {
 
     private String lexema;
-    private int classe;
+    private TypeToken classe;
     private int line;
     private int column;
 
-    public int getClasse() {
+    public TypeToken getClasse() {
         return this.classe;
     }
 
@@ -23,7 +23,14 @@ public class Token {
         return this.line;
     }
 
-    public Token(int classe, String lexema, int line, int column) {
+    public Token(TypeToken classe, int line, int column) {
+        this.classe = classe;
+        this.lexema = classe.getNome();
+        this.line = line;
+        this.column = column;
+    }
+
+    public Token(TypeToken classe, String lexema, int line, int column) {
         this.classe = classe;
         this.lexema = lexema;
         this.line = line;
@@ -32,7 +39,7 @@ public class Token {
 
     @Override
     public String toString() {
-        return "Token [Type=" + classe + ", text=" + lexema + ", column=" + column + ", line=" + line + "]";
+        return "Token [Type=" + classe.getClasse() + ", text=" + lexema + ", column=" + column + ", line=" + line + "]";
     }
 
 }

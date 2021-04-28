@@ -1,6 +1,6 @@
 package projeto_compilador;
 
-public enum ClasseTokens {
+public enum TypeToken {
 	ENDFILE(0, "END OF FILE"), CARACTER(1, "LETRA"), DIGITO(2, "NUMERAL"), DESCONHECIDO(3, "INVALIDO"),
 	INTEIRO(4, "NUMERO INTEIRO"), DECIMAL(5, "NUMERO PONTO FLUTUANTE"), IDENTIFICADOR(6, "IDENTIFICADOR"),
 	MULTIPLICAO(7, "OPERADOR MULT (*)"), DIVISAO(8, "OPERADOR DIV (/)"), SOMA(9, "OPERADOR SOMA (+)"),
@@ -18,7 +18,7 @@ public enum ClasseTokens {
 	private String nome;
 	private int classe;
 
-	ClasseTokens(int classe, String nome) {
+	TypeToken(int classe, String nome) {
 		this.classe = classe;
 		this.nome = nome;
 	}
