@@ -59,11 +59,21 @@ public class Parser {
 			throw new ErrorSyntaxException("Palavra reservada abre chaves Expected");
 		}
 
+		while (token != null && isPrimaryType()) {
+			// lerDeclVariavel();
+		}
+
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.FECHA_BLOCO.getClasse()) {
 			System.out.println("Fecha chaves");
 			throw new ErrorSyntaxException("Palavra reservada fecha chaves Expected");
 		}
+	}
+
+	private boolean isPrimaryType() {
+		return token.getClasse() == ClasseTokens.PR_CHAR.getClasse()
+				|| token.getClasse() == ClasseTokens.PR_FLOAT.getClasse()
+				|| token.getClasse() == ClasseTokens.PR_INT.getClasse();
 	}
 
 }
