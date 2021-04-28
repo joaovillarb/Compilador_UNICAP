@@ -26,26 +26,22 @@ public class Parser {
 	private void execute() {
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.PR_INT.getClasse()) {
-			System.out.println("int");
 			throw new ErrorSyntaxException("Palavra reservada int Expected");
 		}
 
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.PR_MAIN.getClasse()) {
-			System.out.println("main");
 			throw new ErrorSyntaxException("Palavra reservada main Expected");
 		}
 
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.ABRE_PARENTESES.getClasse()) {
-			System.out.println("Abre parenteses");
-			throw new ErrorSyntaxException("Palavra reservada abre parenteses Expected");
+			throw new ErrorSyntaxException("Abre parenteses Expected");
 		}
 
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.FECHA_PARENTESES.getClasse()) {
-			System.out.println("Fecha parenteses");
-			throw new ErrorSyntaxException("Palavra reservada fecha parenteses Expected");
+			throw new ErrorSyntaxException("Fecha parenteses Expected");
 		}
 
 		block();
@@ -55,8 +51,7 @@ public class Parser {
 	private void block() {
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.ABRE_BLOCO.getClasse()) {
-			System.out.println("Abre chaves");
-			throw new ErrorSyntaxException("Palavra reservada abre chaves Expected");
+			throw new ErrorSyntaxException("Abre chaves Expected");
 		}
 
 		while (token != null && isPrimaryType()) {
@@ -65,8 +60,7 @@ public class Parser {
 
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.FECHA_BLOCO.getClasse()) {
-			System.out.println("Fecha chaves");
-			throw new ErrorSyntaxException("Palavra reservada fecha chaves Expected");
+			throw new ErrorSyntaxException("Fecha chaves Expected");
 		}
 	}
 
