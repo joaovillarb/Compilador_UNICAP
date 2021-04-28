@@ -56,8 +56,8 @@ public class Parser {
 		}
 
 		this.getNextToken();
-		while (isPrimaryType()) {
-			declareVariable();
+		while (this.isPrimaryType()) {
+			this.declareVariable();
 			this.getNextToken();
 		}
 
