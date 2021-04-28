@@ -58,6 +58,10 @@ public class Parser {
 			// lerDeclVariavel();
 		}
 
+		while( this.primeiroComando() ) {
+			this.comando();
+		}
+
 		this.getNextToken();
 		if (token.getClasse() != ClasseTokens.FECHA_BLOCO.getClasse()) {
 			throw new ErrorSyntaxException("Fecha chaves Expected");
@@ -69,5 +73,46 @@ public class Parser {
 				|| token.getClasse() == ClasseTokens.PR_FLOAT.getClasse()
 				|| token.getClasse() == ClasseTokens.PR_INT.getClasse();
 	}
+
+	public boolean primeiroComando() {
+		return  this.primeiroIteracao()
+				|| this.primeiroComandoBasico()
+				|| token.getClasse() == ClasseTokens.PR_IF.getClasse();
+	}
+
+	public boolean primeiroIteracao() {
+		return token.getClasse() == ClasseTokens.PR_WHILE.getClasse()
+				|| token.getClasse() == ClasseTokens.PR_DO.getClasse();
+	}
+
+	public boolean primeiroComandoBasico() {
+		return token.getClasse() == ClasseTokens.IDENTIFICADOR.getClasse()
+				|| token.getClasse() == ClasseTokens.ABRE_BLOCO.getClasse();
+	}
+
+	public void comando() {
+		if( this.primeiroComandoBasico() ) {
+			this.comandoBasico();
+		}else
+		if ( this.primeiroIteracao() ) {
+			this.iteracao();
+		}else {
+			this.condicional();
+		}
+	}
+
+	public void comandoBasico() {
+		if( token.getClasse() == ClasseTokens.IDENTIFICADOR.getClasse() ) {
+			this.atribuicao();
+
+		}else if( token.getClasse() == ClasseTokens.ABRE_BLOCO.getClasse()) {
+			this.block();
+		}
+	}
+
+
+
+
+
 
 }
