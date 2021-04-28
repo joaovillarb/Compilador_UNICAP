@@ -16,7 +16,7 @@
       "request": "launch",
       "mainClass": "Compilador_UNICAP/projeto_compilador.Main",
       "projectName": "Compilador_UNICAP",
-      "args": "codigoTeste.txt"
+      "args": "codigoTeste.c"
     }
   ]
 }

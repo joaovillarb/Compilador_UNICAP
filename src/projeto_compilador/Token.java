@@ -30,4 +30,9 @@ public class Token {
         this.column = column;
     }
 
+    @Override
+    public String toString() {
+        return "Token [Type=" + classe + ", text=" + lexema + ", column=" + column + ", line=" + line + "]";
+    }
+
 }
