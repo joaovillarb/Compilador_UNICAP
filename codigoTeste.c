@@ -1,4 +1,5 @@
 int main () {
   int x;
-  int b;
+  float b;
+  char b;
 }

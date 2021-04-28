@@ -71,8 +71,6 @@ public class Parser {
 	}
 
 	private void variableDeclaration() {
-		System.out.println(token);
-
 		this.getNextToken();
 		if (token.getClasse() == ClasseTokens.IDENTIFICADOR.getClasse()) {
 			System.out.println("é identificador");
