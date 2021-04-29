@@ -26,7 +26,9 @@ public class Parser {
 	}
 
 	private void getNextToken() {
-		token = scanner.getNextToken();
+		do {
+			token = scanner.getNextToken();
+		} while (token.getClasse() == TypeToken.COMENTARIO);
 		System.out.println(token);
 	}
 
@@ -53,6 +55,10 @@ public class Parser {
 
 		block();
 
+		if (token.getClasse() != TypeToken.ENDFILE) {
+			throw new ErrorSyntaxException("Fim de arquivo esperado esperado");
+		}
+
 	}
 
 	private void block() {
@@ -64,16 +70,13 @@ public class Parser {
 		this.getNextToken();
 		while (this.isPrimaryType()) {
 			this.declareVariable();
-			this.getNextToken();
 		}
 
 		while (this.isCommand()) {
 			System.out.println("its command");
 			this.command();
-			// throw new ErrorSyntaxException("sair");
 		}
 
-		// this.getNextToken();
 		if (token.getClasse() != TypeToken.FECHA_BLOCO) {
 			throw new ErrorSyntaxException("Fecha chaves esperado");
 		}
@@ -83,6 +86,8 @@ public class Parser {
 	}
 
 	private void declareVariable() {
+		Token tipoPego = token;
+
 		this.getNextToken();
 		if (token.getClasse() != TypeToken.IDENTIFICADOR) {
 			throw new ErrorSyntaxException("Identificador esperado");
@@ -101,37 +106,20 @@ public class Parser {
 		if (token.getClasse() != TypeToken.PONTO_VIRGULA) {
 			throw new ErrorSyntaxException("Ponto e virgula esperado");
 		}
+		this.getNextToken();
 
 	}
 
 	private void command() {
 		if (this.isBasicCommand()) {
 			System.out.println("basic command");
-
 			this.basicCommand();
 		} else if (this.isIteration()) {
-			this.iteracao();
 			System.out.println("iteration");
+			this.iteracao();
 		} else if (this.isCondition()) {
 			System.out.println("condition");
 			this.condicional();
-
-			this.getNextToken();
-			if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
-				throw new ErrorSyntaxException("Abre parenteses esperado");
-			}
-
-			// aqui entra a expressao relacional
-
-			this.getNextToken();
-			if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
-				throw new ErrorSyntaxException("Fecha parenteses esperado");
-			}
-
-			block();
-
-		} else {
-			throw new ErrorSyntaxException("Esperado um comando IF, WHILE ou DO");
 		}
 	}
 
