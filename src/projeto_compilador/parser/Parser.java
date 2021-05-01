@@ -16,7 +16,6 @@ public class Parser {
 	int tipo;
 	String lex;
 
-
 	public Parser(Scanner scanner) {
 		this.scanner = scanner;
 	}
@@ -53,6 +52,7 @@ public class Parser {
 			throw new ErrorSyntaxException("Fecha parenteses esperado");
 		}
 
+		this.getNextToken();
 		block();
 
 		if (token.getClasse() != TypeToken.ENDFILE) {
@@ -62,20 +62,13 @@ public class Parser {
 	}
 
 	private void block() {
-		this.getNextToken();
 		if (token.getClasse() != TypeToken.ABRE_BLOCO) {
 			throw new ErrorSyntaxException("Abre chaves esperado");
 		}
 
 		this.getNextToken();
-		while (this.isPrimaryType()) {
-			this.declareVariable();
-		}
-
-		while (this.isCommand()) {
-			System.out.println("its command");
-			this.command();
-		}
+		recursiva();
+		recursiva2();
 
 		if (token.getClasse() != TypeToken.FECHA_BLOCO) {
 			throw new ErrorSyntaxException("Fecha chaves esperado");
@@ -85,8 +78,35 @@ public class Parser {
 
 	}
 
+	private void recursiva() {
+		if (!this.isPrimaryType()) {
+		} else {
+			this.declareVariable();
+			recursiva();
+		}
+	}
+
+	private void recursiva2() {
+		if (!this.isCommand()) {
+		} else {
+			this.command();
+			recursiva2();
+		}
+	}
+
+	private void recursiva3() {
+		if (token.getClasse() != TypeToken.VIRGULA) {
+		} else {
+			this.getNextToken();
+			if (token.getClasse() != TypeToken.IDENTIFICADOR) {
+				throw new ErrorSyntaxException("Identificador nao esperado");
+			}
+			this.getNextToken();
+			recursiva3();
+		}
+	}
+
 	private void declareVariable() {
-		Token tipoPego = token;
 
 		this.getNextToken();
 		if (token.getClasse() != TypeToken.IDENTIFICADOR) {
@@ -94,14 +114,7 @@ public class Parser {
 		}
 
 		this.getNextToken();
-		while (token.getClasse() == TypeToken.VIRGULA) {
-
-			this.getNextToken();
-			if (token.getClasse() != TypeToken.IDENTIFICADOR) {
-				throw new ErrorSyntaxException("Identificador nao esperado");
-			}
-			this.getNextToken();
-		}
+		recursiva3();
 
 		if (token.getClasse() != TypeToken.PONTO_VIRGULA) {
 			throw new ErrorSyntaxException("Ponto e virgula esperado");
@@ -114,6 +127,7 @@ public class Parser {
 		if (this.isBasicCommand()) {
 			System.out.println("basic command");
 			this.basicCommand();
+			// throw new ErrorSyntaxException("Ponto e virgula esperado");
 		} else if (this.isIteration()) {
 			System.out.println("iteration");
 			this.iteracao();
@@ -125,26 +139,25 @@ public class Parser {
 
 	public void iteracao() {
 
-		if( token.getClasse() == TypeToken.PR_WHILE ) {			
+		if (token.getClasse() == TypeToken.PR_WHILE) {
 			this.comandoWhile();
-		}else
-		if( token.getClasse() == TypeToken.PR_DO ) {
+		} else if (token.getClasse() == TypeToken.PR_DO) {
 			this.comandoDoWhile();
 		}
 	}
 
 	public void condicional() {
-		if( token.getClasse() == TypeToken.PR_IF ) {
+		if (token.getClasse() == TypeToken.PR_IF) {
 
 			this.getNextToken();
-			if( token.getClasse() != TypeToken.ABRE_PARENTESES ) {
+			if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
 				throw new ErrorSyntaxException("Abre parenteses esperado");
 			}
 
 			this.getNextToken();
-			this.expRelacional();
+			// this.expRelacional();
 
-			if( token.getClasse() != TypeToken.FECHA_PARENTESES ) {
+			if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
 				throw new ErrorSyntaxException("Fecha parenteses esperado");
 			}
 
@@ -152,13 +165,12 @@ public class Parser {
 			this.getNextToken();
 			this.command();
 
-
-			if( token.getClasse() == TypeToken.PR_ELSE ) {
+			if (token.getClasse() == TypeToken.PR_ELSE) {
 				this.getNextToken();
 				this.command();
 			}
 
-		}else {
+		} else {
 			throw new ErrorSyntaxException("Deveria ter um IF aqui");
 		}
 	}
@@ -166,43 +178,43 @@ public class Parser {
 	public void comandoDoWhile() {
 		this.doWhileContador++;
 		this.getNextToken();
-		if( this.isCommand() ) {
+		if (this.isCommand()) {
 			this.command();
-		}else {			
+		} else {
 			throw new ErrorSyntaxException("Deveria ter um comando aqui");
 		}
 
-		if( token.getClasse() != TypeToken.PR_WHILE ) {			
+		if (token.getClasse() != TypeToken.PR_WHILE) {
 			throw new ErrorSyntaxException("Deveria ter um WHILE aqui");
 		}
 
 		this.getNextToken();
-		if(token.getClasse() != TypeToken.ABRE_PARENTESES) {
+		if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
 			throw new ErrorSyntaxException("Deveria ter um abre parenteses '(' aqui");
 		}
 		this.getNextToken();
-		if( this.primeiroFator() ) {
+		if (this.primeiroFator()) {
 			expRelacional();
-		}else {
+		} else {
 			throw new ErrorSyntaxException("deveria ter uma expressão relacional aqui");
 		}
-		if( token.getClasse() != TypeToken.FECHA_PARENTESES ) {
+		if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
 			throw new ErrorSyntaxException("Deveria ter uma fecha parenteses ')' aqui");
 		}
 		this.getNextToken();
-		if( token.getClasse() != TypeToken.PONTO_VIRGULA) {			
+		if (token.getClasse() != TypeToken.PONTO_VIRGULA) {
 			throw new ErrorSyntaxException("Deveria ter uma ponto e virgula ';' aqui");
 		}
-		this.getNextToken();//proximo
+		this.getNextToken();// proximo
 	}
 
 	public void comandoWhile() {
-		if( token.getClasse() != TypeToken.ABRE_PARENTESES ) {
+		if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
 			throw new ErrorSyntaxException("Abre parenteses esperado");
 		}
 		this.getNextToken();
 		this.expRelacional();
-		if( token.getClasse() != TypeToken.FECHA_PARENTESES ) {
+		if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
 			throw new ErrorSyntaxException("Fecha parenteses esperado");
 		}
 		this.whileContador++;
@@ -214,7 +226,7 @@ public class Parser {
 		Codigo esqRel, dirRel;
 		esqRel = this.expAritmetica();
 
-		if( this.isOpRelacional() ) {
+		if (this.isOpRelacional()) {
 			this.getNextToken();
 			dirRel = this.expAritmetica();
 		}
@@ -224,14 +236,14 @@ public class Parser {
 		Codigo ladoEsquerdo = null;
 		Codigo ladoDireito;
 
-		if( token.getClasse() == TypeToken.SOMA || token.getClasse() == TypeToken.SUBTRACAO ) {
+		if (token.getClasse() == TypeToken.SOMA || token.getClasse() == TypeToken.SUBTRACAO) {
 			this.getNextToken();
 			ladoEsquerdo = this.termo();
 			Token op = token;
 			ladoDireito = this.exp();
-			if(ladoDireito != null) {
-				ladoEsquerdo.classe =  verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
-			}else {
+			if (ladoDireito != null) {
+				ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
+			} else {
 				return ladoEsquerdo;
 			}
 		}
@@ -243,18 +255,20 @@ public class Parser {
 		Codigo ladoDireito;
 		Token op;
 
-		while( token.getClasse() == TypeToken.MULTIPLICAO || token.getClasse() == TypeToken.DIVISAO ) {
+		while (token.getClasse() == TypeToken.MULTIPLICAO || token.getClasse() == TypeToken.DIVISAO) {
 			op = token;
 			this.getNextToken();
 			ladoDireito = this.fator();
 
-			if(op.getClasse() == TypeToken.DIVISAO ) {
+			if (op.getClasse() == TypeToken.DIVISAO) {
 
-				if(ladoEsquerdo.getClasse() ==  ladoDireito.getClasse() ) {
+				if (ladoEsquerdo.getClasse() == ladoDireito.getClasse()) {
 					ladoDireito.classe = TypeToken.CARACTER.getClasse();
-				}else
-				if( (ladoEsquerdo.getClasse() == TypeToken.INTEIRO.getClasse() && ladoDireito.getClasse() == TypeToken.DECIMAL.getClasse()) || (ladoEsquerdo.getClasse() == TypeToken.DECIMAL.getClasse() || ladoDireito.getClasse() == TypeToken.INTEIRO.getClasse()) ) {
-					ladoDireito.classe = TypeToken.DECIMAL.getClasse(); //converte em DECIMAL
+				} else if ((ladoEsquerdo.getClasse() == TypeToken.INTEIRO.getClasse()
+						&& ladoDireito.getClasse() == TypeToken.DECIMAL.getClasse())
+						|| (ladoEsquerdo.getClasse() == TypeToken.DECIMAL.getClasse()
+								|| ladoDireito.getClasse() == TypeToken.INTEIRO.getClasse())) {
+					ladoDireito.classe = TypeToken.DECIMAL.getClasse(); // converte em DECIMAL
 				}
 			}
 			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
@@ -262,29 +276,27 @@ public class Parser {
 		return ladoEsquerdo;
 	}
 
-
 	public Codigo fator() {
 		Codigo code;
 		tipo = token.getClasse().getClasse();
 		lex = token.getLexema();
 
-		if( token.getClasse() == TypeToken.IDENTIFICADOR) {
+		if (token.getClasse() == TypeToken.IDENTIFICADOR) {
 
-			if(isPrimaryType() == false){
+			if (isPrimaryType() == false) {
 				throw new ErrorSyntaxException("Identificador nao encontrado");
 			}
 			this.getNextToken();
-		}else
-		if( token.getClasse() == TypeToken.INTEIRO ||  token.getClasse() == TypeToken.DECIMAL || token.getClasse() == TypeToken.CARACTER ) {
+		} else if (token.getClasse() == TypeToken.INTEIRO || token.getClasse() == TypeToken.DECIMAL
+				|| token.getClasse() == TypeToken.CARACTER) {
 			this.getNextToken();
-		}else
-		if( token.getClasse() == TypeToken.ABRE_PARENTESES ) {
+		} else if (token.getClasse() == TypeToken.ABRE_PARENTESES) {
 
 			this.getNextToken();
 			Codigo exp = this.exp();
 			Codigo termo = this.termo();
 
-			if(exp != null) {
+			if (exp != null) {
 				termo.classe = verificarTipo(termo.getClasse(), exp.getClasse());
 			}
 
@@ -292,13 +304,13 @@ public class Parser {
 			lex = code.getLexema();
 			tipo = code.getClasse();
 
-			if( token.getClasse() != TypeToken.FECHA_PARENTESES ) {
+			if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
 				throw new ErrorSyntaxException("Fecha parenteses esperado");
 			}
 
 			this.getNextToken();
 
-		}else {
+		} else {
 			throw new ErrorSyntaxException("Era esperado uma variavel, '(' ou [interiro, float, char]");
 		}
 
@@ -310,21 +322,22 @@ public class Parser {
 		Codigo ladoEsquerdo = this.termo();
 		Codigo ladoDireito = this.exp();
 
-		if(ladoDireito != null) {
+		if (ladoDireito != null) {
 			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
 		}
 		return ladoEsquerdo;
 	}
 
 	public int verificarTipo(int ladoEsquerdo, int ladoDireito) {
-		
-		if(ladoEsquerdo == ladoDireito) {
+
+		if (ladoEsquerdo == ladoDireito) {
 			return ladoEsquerdo;
 
-		}else if( (ladoEsquerdo == TypeToken.DECIMAL.getClasse() && ladoDireito == TypeToken.INTEIRO.getClasse()) || (ladoEsquerdo == TypeToken.INTEIRO.getClasse() && ladoDireito == TypeToken.DECIMAL.getClasse()) ) {
+		} else if ((ladoEsquerdo == TypeToken.DECIMAL.getClasse() && ladoDireito == TypeToken.INTEIRO.getClasse())
+				|| (ladoEsquerdo == TypeToken.INTEIRO.getClasse() && ladoDireito == TypeToken.DECIMAL.getClasse())) {
 			return TypeToken.DECIMAL.getClasse();
 
-		}else if(ladoEsquerdo == TypeToken.CARACTER.getClasse() && ladoDireito == TypeToken.CARACTER.getClasse()) {
+		} else if (ladoEsquerdo == TypeToken.CARACTER.getClasse() && ladoDireito == TypeToken.CARACTER.getClasse()) {
 			return TypeToken.CARACTER.getClasse();
 
 		}
@@ -332,30 +345,23 @@ public class Parser {
 	}
 
 	public boolean isOpRelacional() {
-		if(token.getClasse() == TypeToken.IGUALDADE) {
+		if (token.getClasse() == TypeToken.IGUALDADE) {
 			return true;
-		}else
-		if(token.getClasse() == TypeToken.DIFERENCA) {
+		} else if (token.getClasse() == TypeToken.DIFERENCA) {
 			return true;
-		}else
-		if(token.getClasse() == TypeToken.MAIOR_IGUAL) {
+		} else if (token.getClasse() == TypeToken.MAIOR_IGUAL) {
 			return true;
-		}else
-		if(token.getClasse() == TypeToken.MENOR_IGUAL) {
+		} else if (token.getClasse() == TypeToken.MENOR_IGUAL) {
 			return true;
-		}else
-		if(token.getClasse() == TypeToken.MENOR_QUE) {
+		} else if (token.getClasse() == TypeToken.MENOR_QUE) {
 			return true;
-		}else
-		if(token.getClasse() == TypeToken.MAIOR_QUE) {
+		} else if (token.getClasse() == TypeToken.MAIOR_QUE) {
 			return true;
-		}else {
+		} else {
 			throw new ErrorSyntaxException("Tokens esperados: \">\" | \"<\" | \">=\" | \"<=\" | \"==\" | \"!=\"");
 		}
 
 	}
-
-
 
 	private void basicCommand() {
 		if (token.getClasse() == TypeToken.IDENTIFICADOR) {
@@ -394,12 +400,9 @@ public class Parser {
 	}
 
 	public boolean primeiroFator() {
-		return token.getClasse() == TypeToken.ABRE_PARENTESES
-				|| token.getClasse() == TypeToken.IDENTIFICADOR
-				|| token.getClasse() == TypeToken.INTEIRO
-				|| token.getClasse() == TypeToken.DECIMAL
+		return token.getClasse() == TypeToken.ABRE_PARENTESES || token.getClasse() == TypeToken.IDENTIFICADOR
+				|| token.getClasse() == TypeToken.INTEIRO || token.getClasse() == TypeToken.DECIMAL
 				|| token.getClasse() == TypeToken.CARACTER;
 	}
-
 
 }
