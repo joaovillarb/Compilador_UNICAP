@@ -267,7 +267,7 @@ public class Parser {
 			Token op = token;
 			ladoDireito = this.exp();
 			if (ladoDireito != null) {
-				ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
+				ladoEsquerdo.type = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
 			} else {
 				return ladoEsquerdo;
 			}
@@ -288,22 +288,22 @@ public class Parser {
 			if (op.getType() == TypeToken.DIVISAO) {
 
 				if (ladoEsquerdo.getType() == ladoDireito.getType()) {
-					ladoDireito.classe = TypeToken.CARACTER.getType();
-				} else if ((ladoEsquerdo.getType() == TypeToken.INTEIRO.getType()
-						&& ladoDireito.getType() == TypeToken.DECIMAL.getType())
-						|| (ladoEsquerdo.getType() == TypeToken.DECIMAL.getType()
-								|| ladoDireito.getType() == TypeToken.INTEIRO.getType())) {
-					ladoDireito.classe = TypeToken.DECIMAL.getType(); // converte em DECIMAL
+					ladoDireito.type = TypeToken.CARACTER.getClasse();
+				} else if ((ladoEsquerdo.getType() == TypeToken.INTEIRO.getClasse()
+						&& ladoDireito.getType() == TypeToken.DECIMAL.getClasse())
+						|| (ladoEsquerdo.getType() == TypeToken.DECIMAL.getClasse()
+								|| ladoDireito.getType() == TypeToken.INTEIRO.getClasse())) {
+					ladoDireito.type = TypeToken.DECIMAL.getClasse(); // converte em DECIMAL
 				}
 			}
-			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
+			ladoEsquerdo.type = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
 		}
 		return ladoEsquerdo;
 	}
 
 	public Codigo fator() {
 		Codigo code;
-		tipo = token.getType().getType();
+		tipo = token.getType().getClasse();
 		lex = token.getLexema();
 
 		if (token.getType() == TypeToken.IDENTIFICADOR) {
@@ -323,7 +323,7 @@ public class Parser {
 			Codigo termo = this.termo();
 
 			if (exp != null) {
-				termo.classe = verificarTipo(termo.getType(), exp.getType());
+				termo.type = verificarTipo(termo.getType(), exp.getType());
 			}
 
 			code = termo;
@@ -351,7 +351,7 @@ public class Parser {
 		Codigo ladoDireito = this.exp();
 
 		if (ladoDireito != null) {
-			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
+			ladoEsquerdo.type = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
 		}
 		return ladoEsquerdo;
 	}
@@ -361,12 +361,12 @@ public class Parser {
 		if (ladoEsquerdo == ladoDireito) {
 			return ladoEsquerdo;
 
-		} else if ((ladoEsquerdo == TypeToken.DECIMAL.getType() && ladoDireito == TypeToken.INTEIRO.getType())
-				|| (ladoEsquerdo == TypeToken.INTEIRO.getType() && ladoDireito == TypeToken.DECIMAL.getType())) {
-			return TypeToken.DECIMAL.getType();
+		} else if ((ladoEsquerdo == TypeToken.DECIMAL.getClasse() && ladoDireito == TypeToken.INTEIRO.getClasse())
+				|| (ladoEsquerdo == TypeToken.INTEIRO.getClasse() && ladoDireito == TypeToken.DECIMAL.getClasse())) {
+			return TypeToken.DECIMAL.getClasse();
 
-		} else if (ladoEsquerdo == TypeToken.CARACTER.getType() && ladoDireito == TypeToken.CARACTER.getType()) {
-			return TypeToken.CARACTER.getType();
+		} else if (ladoEsquerdo == TypeToken.CARACTER.getClasse() && ladoDireito == TypeToken.CARACTER.getClasse()) {
+			return TypeToken.CARACTER.getClasse();
 
 		}
 		return -1;
@@ -395,10 +395,10 @@ public class Parser {
 				// this.ladoDireitoeiroAtrib.lexema = "T" + contador;
 				// }
 
-				// this.ladoEsquerdouerdoAtrib.classe =
+				// this.ladoEsquerdouerdoAtrib.type =
 				// verificador.verificarAtributo(this.ladoEsquerdouerdoAtrib.getType(),
 				// this.ladoDireitoeiroAtrib.getType());
-				// if (this.ladoEsquerdouerdoAtrib.classe == -1) {
+				// if (this.ladoEsquerdouerdoAtrib.type == -1) {
 				// this.error.tiposIcompativeis(this.scanner.getPosicaoArquivo().toString());
 				// }
 				this.getNextToken();
