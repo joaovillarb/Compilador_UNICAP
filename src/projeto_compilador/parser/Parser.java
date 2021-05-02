@@ -308,7 +308,7 @@ public class Parser {
 
 		if (token.getType() == TypeToken.IDENTIFICADOR) {
 
-			if (isPrimaryType() == false) {
+			if (primeiroFator() == false) {
 				String msg = "Identificador esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
