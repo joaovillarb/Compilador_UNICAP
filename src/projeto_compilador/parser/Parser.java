@@ -27,31 +27,31 @@ public class Parser {
 	private void getNextToken() {
 		do {
 			token = scanner.getNextToken();
-		} while (token.getClasse() == TypeToken.COMENTARIO);
+		} while (token.getType() == TypeToken.COMENTARIO);
 		System.out.println(token);
 	}
 
 	private void execute() {
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.PR_INT) {
+		if (token.getType() != TypeToken.PR_INT) {
 			String msg = "Palavra reservada int esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
 
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.PR_MAIN) {
+		if (token.getType() != TypeToken.PR_MAIN) {
 			String msg = "Palavra reservada main esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
 
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
+		if (token.getType() != TypeToken.ABRE_PARENTESES) {
 			String msg = "Abre parenteses esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
 
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
+		if (token.getType() != TypeToken.FECHA_PARENTESES) {
 			String msg = "Fecha parenteses esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -59,7 +59,7 @@ public class Parser {
 		this.getNextToken();
 		block();
 
-		if (token.getClasse() != TypeToken.ENDFILE) {
+		if (token.getType() != TypeToken.ENDFILE) {
 			String msg = "Fim de arquivo esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -67,7 +67,7 @@ public class Parser {
 	}
 
 	private void block() {
-		if (token.getClasse() != TypeToken.ABRE_BLOCO) {
+		if (token.getType() != TypeToken.ABRE_BLOCO) {
 			String msg = "Abre chaves esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -76,7 +76,7 @@ public class Parser {
 		recursiva();
 		recursiva2();
 
-		if (token.getClasse() != TypeToken.FECHA_BLOCO) {
+		if (token.getType() != TypeToken.FECHA_BLOCO) {
 			String msg = "Fecha chaves esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -102,10 +102,10 @@ public class Parser {
 	}
 
 	private void recursiva3() {
-		if (token.getClasse() != TypeToken.VIRGULA) {
+		if (token.getType() != TypeToken.VIRGULA) {
 		} else {
 			this.getNextToken();
-			if (token.getClasse() != TypeToken.IDENTIFICADOR) {
+			if (token.getType() != TypeToken.IDENTIFICADOR) {
 				String msg = "Identificador esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
@@ -117,7 +117,7 @@ public class Parser {
 	private void declareVariable() {
 
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.IDENTIFICADOR) {
+		if (token.getType() != TypeToken.IDENTIFICADOR) {
 			String msg = "Identificador esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -125,7 +125,7 @@ public class Parser {
 		this.getNextToken();
 		recursiva3();
 
-		if (token.getClasse() != TypeToken.PONTO_VIRGULA) {
+		if (token.getType() != TypeToken.PONTO_VIRGULA) {
 			String msg = "Ponto e virgula esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -149,18 +149,18 @@ public class Parser {
 
 	public void iteracao() {
 
-		if (token.getClasse() == TypeToken.PR_WHILE) {
+		if (token.getType() == TypeToken.PR_WHILE) {
 			this.comandoWhile();
-		} else if (token.getClasse() == TypeToken.PR_DO) {
+		} else if (token.getType() == TypeToken.PR_DO) {
 			this.comandoDoWhile();
 		}
 	}
 
 	public void condicional() {
-		if (token.getClasse() == TypeToken.PR_IF) {
+		if (token.getType() == TypeToken.PR_IF) {
 
 			this.getNextToken();
-			if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
+			if (token.getType() != TypeToken.ABRE_PARENTESES) {
 				String msg = "Abre parenteses esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
@@ -168,7 +168,7 @@ public class Parser {
 			this.getNextToken();
 			// this.expRelacional();
 
-			if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
+			if (token.getType() != TypeToken.FECHA_PARENTESES) {
 				String msg = "Fecha parenteses esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
@@ -177,7 +177,7 @@ public class Parser {
 			this.getNextToken();
 			this.command();
 
-			if (token.getClasse() == TypeToken.PR_ELSE) {
+			if (token.getType() == TypeToken.PR_ELSE) {
 				this.getNextToken();
 				this.command();
 			}
@@ -198,13 +198,13 @@ public class Parser {
 
 		this.command();
 
-		if (token.getClasse() != TypeToken.PR_WHILE) {
+		if (token.getType() != TypeToken.PR_WHILE) {
 			String msg = "Palavra reservada while esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
 
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
+		if (token.getType() != TypeToken.ABRE_PARENTESES) {
 			String msg = "Abre parenteses esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -215,12 +215,12 @@ public class Parser {
 			String msg = "Expressão relacional esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
-		if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
+		if (token.getType() != TypeToken.FECHA_PARENTESES) {
 			String msg = "Fecha parenteses esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.PONTO_VIRGULA) {
+		if (token.getType() != TypeToken.PONTO_VIRGULA) {
 			String msg = "Ponto e virgula esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -229,13 +229,13 @@ public class Parser {
 
 	public void comandoWhile() {
 		this.getNextToken();
-		if (token.getClasse() != TypeToken.ABRE_PARENTESES) {
+		if (token.getType() != TypeToken.ABRE_PARENTESES) {
 			String msg = "Abre parenteses esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
 		this.getNextToken();
 		this.expRelacional();
-		if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
+		if (token.getType() != TypeToken.FECHA_PARENTESES) {
 			String msg = "Fecha parenteses esperado";
 			throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 		}
@@ -261,13 +261,13 @@ public class Parser {
 		Codigo ladoEsquerdo = null;
 		Codigo ladoDireito;
 
-		if (token.getClasse() == TypeToken.SOMA || token.getClasse() == TypeToken.SUBTRACAO) {
+		if (token.getType() == TypeToken.SOMA || token.getType() == TypeToken.SUBTRACAO) {
 			this.getNextToken();
 			ladoEsquerdo = this.termo();
 			Token op = token;
 			ladoDireito = this.exp();
 			if (ladoDireito != null) {
-				ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
+				ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
 			} else {
 				return ladoEsquerdo;
 			}
@@ -280,57 +280,57 @@ public class Parser {
 		Codigo ladoDireito;
 		Token op;
 
-		while (token.getClasse() == TypeToken.MULTIPLICAO || token.getClasse() == TypeToken.DIVISAO) {
+		while (token.getType() == TypeToken.MULTIPLICAO || token.getType() == TypeToken.DIVISAO) {
 			op = token;
 			this.getNextToken();
 			ladoDireito = this.fator();
 
-			if (op.getClasse() == TypeToken.DIVISAO) {
+			if (op.getType() == TypeToken.DIVISAO) {
 
-				if (ladoEsquerdo.getClasse() == ladoDireito.getClasse()) {
-					ladoDireito.classe = TypeToken.CARACTER.getClasse();
-				} else if ((ladoEsquerdo.getClasse() == TypeToken.INTEIRO.getClasse()
-						&& ladoDireito.getClasse() == TypeToken.DECIMAL.getClasse())
-						|| (ladoEsquerdo.getClasse() == TypeToken.DECIMAL.getClasse()
-								|| ladoDireito.getClasse() == TypeToken.INTEIRO.getClasse())) {
-					ladoDireito.classe = TypeToken.DECIMAL.getClasse(); // converte em DECIMAL
+				if (ladoEsquerdo.getType() == ladoDireito.getType()) {
+					ladoDireito.classe = TypeToken.CARACTER.getType();
+				} else if ((ladoEsquerdo.getType() == TypeToken.INTEIRO.getType()
+						&& ladoDireito.getType() == TypeToken.DECIMAL.getType())
+						|| (ladoEsquerdo.getType() == TypeToken.DECIMAL.getType()
+								|| ladoDireito.getType() == TypeToken.INTEIRO.getType())) {
+					ladoDireito.classe = TypeToken.DECIMAL.getType(); // converte em DECIMAL
 				}
 			}
-			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
+			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
 		}
 		return ladoEsquerdo;
 	}
 
 	public Codigo fator() {
 		Codigo code;
-		tipo = token.getClasse().getClasse();
+		tipo = token.getType().getType();
 		lex = token.getLexema();
 
-		if (token.getClasse() == TypeToken.IDENTIFICADOR) {
+		if (token.getType() == TypeToken.IDENTIFICADOR) {
 
 			if (isPrimaryType() == false) {
 				String msg = "Identificador esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
 			this.getNextToken();
-		} else if (token.getClasse() == TypeToken.INTEIRO || token.getClasse() == TypeToken.DECIMAL
-				|| token.getClasse() == TypeToken.CARACTER) {
+		} else if (token.getType() == TypeToken.INTEIRO || token.getType() == TypeToken.DECIMAL
+				|| token.getType() == TypeToken.CARACTER) {
 			this.getNextToken();
-		} else if (token.getClasse() == TypeToken.ABRE_PARENTESES) {
+		} else if (token.getType() == TypeToken.ABRE_PARENTESES) {
 
 			this.getNextToken();
 			Codigo exp = this.exp();
 			Codigo termo = this.termo();
 
 			if (exp != null) {
-				termo.classe = verificarTipo(termo.getClasse(), exp.getClasse());
+				termo.classe = verificarTipo(termo.getType(), exp.getType());
 			}
 
 			code = termo;
 			lex = code.getLexema();
-			tipo = code.getClasse();
+			tipo = code.getType();
 
-			if (token.getClasse() != TypeToken.FECHA_PARENTESES) {
+			if (token.getType() != TypeToken.FECHA_PARENTESES) {
 				String msg = "Fecha parenteses esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
@@ -351,7 +351,7 @@ public class Parser {
 		Codigo ladoDireito = this.exp();
 
 		if (ladoDireito != null) {
-			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getClasse(), ladoDireito.getClasse());
+			ladoEsquerdo.classe = verificarTipo(ladoEsquerdo.getType(), ladoDireito.getType());
 		}
 		return ladoEsquerdo;
 	}
@@ -361,43 +361,43 @@ public class Parser {
 		if (ladoEsquerdo == ladoDireito) {
 			return ladoEsquerdo;
 
-		} else if ((ladoEsquerdo == TypeToken.DECIMAL.getClasse() && ladoDireito == TypeToken.INTEIRO.getClasse())
-				|| (ladoEsquerdo == TypeToken.INTEIRO.getClasse() && ladoDireito == TypeToken.DECIMAL.getClasse())) {
-			return TypeToken.DECIMAL.getClasse();
+		} else if ((ladoEsquerdo == TypeToken.DECIMAL.getType() && ladoDireito == TypeToken.INTEIRO.getType())
+				|| (ladoEsquerdo == TypeToken.INTEIRO.getType() && ladoDireito == TypeToken.DECIMAL.getType())) {
+			return TypeToken.DECIMAL.getType();
 
-		} else if (ladoEsquerdo == TypeToken.CARACTER.getClasse() && ladoDireito == TypeToken.CARACTER.getClasse()) {
-			return TypeToken.CARACTER.getClasse();
+		} else if (ladoEsquerdo == TypeToken.CARACTER.getType() && ladoDireito == TypeToken.CARACTER.getType()) {
+			return TypeToken.CARACTER.getType();
 
 		}
 		return -1;
 	}
 
 	private void basicCommand() {
-		if (token.getClasse() == TypeToken.IDENTIFICADOR) {
+		if (token.getType() == TypeToken.IDENTIFICADOR) {
 			this.attribution();
 
-		} else if (token.getClasse() == TypeToken.ABRE_BLOCO) {
+		} else if (token.getType() == TypeToken.ABRE_BLOCO) {
 			this.block();
 		}
 	}
 
 	private void attribution() {
 		this.getNextToken();
-		if (token.getClasse() == TypeToken.ATRIBUICAO) {
+		if (token.getType() == TypeToken.ATRIBUICAO) {
 			this.getNextToken();
 			if (this.primeiroFator()) {
 				// this.ladoDireitoeiroAtrib = this.expAritmetica();
-				// if (this.ladoDireitoeiroAtrib.getClasse() == ClasseTokens.INTEIRO.getClasse()
-				// && this.ladoEsquerdouerdoAtrib.getClasse() ==
-				// ClasseTokens.DECIMAL.getClasse()) {
+				// if (this.ladoDireitoeiroAtrib.getType() == ClasseTokens.INTEIRO.getType()
+				// && this.ladoEsquerdouerdoAtrib.getType() ==
+				// ClasseTokens.DECIMAL.getType()) {
 				// System.out.println(this.newTemp() + " = (float)" +
 				// this.ladoDireitoeiroAtrib.getLexema());
 				// this.ladoDireitoeiroAtrib.lexema = "T" + contador;
 				// }
 
 				// this.ladoEsquerdouerdoAtrib.classe =
-				// verificador.verificarAtributo(this.ladoEsquerdouerdoAtrib.getClasse(),
-				// this.ladoDireitoeiroAtrib.getClasse());
+				// verificador.verificarAtributo(this.ladoEsquerdouerdoAtrib.getType(),
+				// this.ladoDireitoeiroAtrib.getType());
 				// if (this.ladoEsquerdouerdoAtrib.classe == -1) {
 				// this.error.tiposIcompativeis(this.scanner.getPosicaoArquivo().toString());
 				// }
@@ -408,7 +408,7 @@ public class Parser {
 				// aritmetica", token.getLexema());
 			}
 
-			if (token.getClasse() != TypeToken.PONTO_VIRGULA) {
+			if (token.getType() != TypeToken.PONTO_VIRGULA) {
 				String msg = "Ponto e virgula esperado";
 				throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
 			}
@@ -419,8 +419,8 @@ public class Parser {
 	}
 
 	private boolean isPrimaryType() {
-		return token.getClasse() == TypeToken.PR_CHAR || token.getClasse() == TypeToken.PR_FLOAT
-				|| token.getClasse() == TypeToken.PR_INT;
+		return token.getType() == TypeToken.PR_CHAR || token.getType() == TypeToken.PR_FLOAT
+				|| token.getType() == TypeToken.PR_INT;
 	}
 
 	private boolean isCommand() {
@@ -428,27 +428,27 @@ public class Parser {
 	}
 
 	private boolean isCondition() {
-		return token.getClasse() == TypeToken.PR_IF;
+		return token.getType() == TypeToken.PR_IF;
 	}
 
 	private boolean isIteration() {
-		return token.getClasse() == TypeToken.PR_WHILE || token.getClasse() == TypeToken.PR_DO;
+		return token.getType() == TypeToken.PR_WHILE || token.getType() == TypeToken.PR_DO;
 	}
 
 	private boolean isBasicCommand() {
-		return token.getClasse() == TypeToken.IDENTIFICADOR || token.getClasse() == TypeToken.ABRE_BLOCO;
+		return token.getType() == TypeToken.IDENTIFICADOR || token.getType() == TypeToken.ABRE_BLOCO;
 	}
 
 	private boolean isRelationalOperator() {
-		return token.getClasse() == TypeToken.IGUALDADE || token.getClasse() == TypeToken.DIFERENCA
-				|| token.getClasse() == TypeToken.MAIOR_IGUAL || token.getClasse() == TypeToken.MENOR_IGUAL
-				|| token.getClasse() == TypeToken.MENOR_QUE || token.getClasse() == TypeToken.MAIOR_QUE;
+		return token.getType() == TypeToken.IGUALDADE || token.getType() == TypeToken.DIFERENCA
+				|| token.getType() == TypeToken.MAIOR_IGUAL || token.getType() == TypeToken.MENOR_IGUAL
+				|| token.getType() == TypeToken.MENOR_QUE || token.getType() == TypeToken.MAIOR_QUE;
 	}
 
 	public boolean primeiroFator() {
-		return token.getClasse() == TypeToken.ABRE_PARENTESES || token.getClasse() == TypeToken.IDENTIFICADOR
-				|| token.getClasse() == TypeToken.INTEIRO || token.getClasse() == TypeToken.DECIMAL
-				|| token.getClasse() == TypeToken.CARACTER;
+		return token.getType() == TypeToken.ABRE_PARENTESES || token.getType() == TypeToken.IDENTIFICADOR
+				|| token.getType() == TypeToken.INTEIRO || token.getType() == TypeToken.DECIMAL
+				|| token.getType() == TypeToken.CARACTER;
 	}
 
 }
