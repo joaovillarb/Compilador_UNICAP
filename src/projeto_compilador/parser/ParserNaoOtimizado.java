@@ -6,7 +6,7 @@ import projeto_compilador.TypeToken;
 import projeto_compilador.Token;
 import projeto_compilador.exceptions.ErrorSyntaxException;
 
-public class Parser {
+public class ParserNaoOtimizado {
 
 	private Scanner scanner;
 	static Token token;
@@ -16,7 +16,7 @@ public class Parser {
 	int tipo;
 	String lex;
 
-	public Parser(Scanner scanner) {
+	public ParserNaoOtimizado(Scanner scanner) {
 		this.scanner = scanner;
 	}
 
