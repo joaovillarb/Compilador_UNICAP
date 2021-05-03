@@ -151,7 +151,7 @@ public class ParserOtimizado {
     if (token.getType() == TypeToken.PR_WHILE) {
       this.comandoWhile();
     } else if (token.getType() == TypeToken.PR_DO) {
-      // this.comandoDoWhile();
+      this.comandoDoWhile();
     }
   }
 
@@ -191,6 +191,47 @@ public class ParserOtimizado {
     // }
   }
 
+  public void comandoDoWhile() {
+    this.doWhileContador++;
+    this.getNextToken();
+    if (!this.isCommand()) {
+      String msg = "Deveria ter um comando aqui";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+
+    this.command();
+
+    if (token.getType() != TypeToken.PR_WHILE) {
+      String msg = "Palavra reservada while esperado";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+
+    this.getNextToken();
+    if (token.getType() != TypeToken.ABRE_PARENTESES) {
+      String msg = "Abre parenteses esperado";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+    // this.getNextToken();
+    T();
+    if (this.primeiroFator()) {
+      El();
+      // expRelacional();
+    } else {
+      String msg = "Expressão relacional esperado";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+    if (token.getType() != TypeToken.FECHA_PARENTESES) {
+      String msg = "Fecha parenteses esperado";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+    this.getNextToken();
+    if (token.getType() != TypeToken.PONTO_VIRGULA) {
+      String msg = "Ponto e virgula esperado";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+    this.getNextToken();// proximo
+  }
+
   public void comandoWhile() {
     this.getNextToken();
     if (token.getType() != TypeToken.ABRE_PARENTESES) {
@@ -224,38 +265,25 @@ public class ParserOtimizado {
   private void attribution() {
     this.getNextToken();
     if (token.getType() == TypeToken.ATRIBUICAO) {
-      this.getNextToken();
-      if (this.primeiroFator()) {
-        // this.ladoDireitoeiroAtrib = this.expAritmetica();
-        // if (this.ladoDireitoeiroAtrib.getType() == ClasseTokens.INTEIRO.getType()
-        // && this.ladoEsquerdouerdoAtrib.getType() ==
-        // ClasseTokens.DECIMAL.getType()) {
-        // System.out.println(this.newTemp() + " = (float)" +
-        // this.ladoDireitoeiroAtrib.getLexema());
-        // this.ladoDireitoeiroAtrib.lexema = "T" + contador;
-        // }
-
-        // this.ladoEsquerdouerdoAtrib.classe =
-        // verificador.verificarAtributo(this.ladoEsquerdouerdoAtrib.getType(),
-        // this.ladoDireitoeiroAtrib.getType());
-        // if (this.ladoEsquerdouerdoAtrib.classe == -1) {
-        // this.error.tiposIcompativeis(this.scanner.getPosicaoArquivo().toString());
-        // }
-        this.getNextToken();
-
-      } else {
-        // this.error.tokenErrado(scanner.getPosicaoArquivo().toString(), "Expressão
-        // aritmetica", token.getLexema());
-      }
-
+      T();
+      Al();
       if (token.getType() != TypeToken.PONTO_VIRGULA) {
         String msg = "Ponto e virgula esperado";
         throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
       }
       this.getNextToken();
-
     }
 
+  }
+
+  private void Al() {
+    this.getNextToken();
+    if (token.getType() == TypeToken.PONTO_VIRGULA) {
+    } else {
+      OP();
+      T();
+      Al();
+    }
   }
 
   public void El() {
@@ -272,7 +300,7 @@ public class ParserOtimizado {
   public void T() {
     this.getNextToken();
     if (!this.primeiroFator()) {
-      String msg = "Esperado um IDENTIFICADOR, INTEIRO ou FLOAT";
+      String msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
   }

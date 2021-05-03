@@ -4,26 +4,26 @@ int main() {
     char hj;
     double sdd = 100.100;
     k = x;
-    // w = 5/x+y*8+5* 7;
+    w = 5/x+y*8+5* 7;
     /** /** /*
        teste %
     ***/
 
-    // hj = 'a'+1;
+    hj = 'a'+1;
 
-    //  do{
+     do{
    
 	
-    //     w = w + 1;
+        w = w + 1;
 	
-    //  }while();
+     }while(x>w);
 
 
     y = x;
     
     while (x>w*8) {
        float y,a;
-        // w = w +1;
+        w = w +1;
         y = x;
     }
 
