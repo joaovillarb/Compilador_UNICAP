@@ -6,17 +6,12 @@ import projeto_compilador.TypeToken;
 import projeto_compilador.Token;
 import projeto_compilador.exceptions.ErrorSyntaxException;
 
-public class ParserOtimizado {
+public class Parser {
 
   private Scanner scanner;
-  static Token token;
-  private int doWhileContador;
-  private int ifContador;
-  private int whileContador;
-  int tipo;
-  String lex;
+  private Token token;
 
-  public ParserOtimizado(Scanner scanner) {
+  public Parser(Scanner scanner) {
     this.scanner = scanner;
   }
 
@@ -137,7 +132,6 @@ public class ParserOtimizado {
     if (this.isBasicCommand()) {
       System.out.println("basic command");
       this.basicCommand();
-      // throw new ErrorSyntaxException("Ponto e virgula esperado");
     } else if (this.isIteration()) {
       System.out.println("iteration");
       this.iteracao();
@@ -156,43 +150,37 @@ public class ParserOtimizado {
   }
 
   public void condicional() {
-    // if (token.getType() == TypeToken.PR_IF) {
+    if (token.getType() == TypeToken.PR_IF) {
 
-    this.getNextToken();
-    if (token.getType() != TypeToken.ABRE_PARENTESES) {
-      String msg = "Abre parenteses esperado";
-      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-    }
+      this.getNextToken();
+      if (token.getType() != TypeToken.ABRE_PARENTESES) {
+        String msg = "Abre parenteses esperado";
+        throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+      }
 
-    T();
-    El();
+      T();
+      El();
 
-    // this.getNextToken();
-    // this.expRelacional();
+      if (token.getType() != TypeToken.FECHA_PARENTESES) {
+        String msg = "Fecha parenteses esperado";
+        throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+      }
 
-    if (token.getType() != TypeToken.FECHA_PARENTESES) {
-      String msg = "Fecha parenteses esperado";
-      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-    }
-
-    this.ifContador++;
-    this.getNextToken();
-    this.command();
-
-    if (token.getType() == TypeToken.PR_ELSE) {
       this.getNextToken();
       this.command();
-    }
 
-    // }
-    // else {
-    // String msg = "Deveria ter um IF aqui";
-    // throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-    // }
+      if (token.getType() == TypeToken.PR_ELSE) {
+        this.getNextToken();
+        this.command();
+      }
+
+    } else {
+      String msg = "Deveria ter um IF aqui";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
   }
 
   public void comandoDoWhile() {
-    this.doWhileContador++;
     this.getNextToken();
     if (!this.isCommand()) {
       String msg = "Deveria ter um comando aqui";
@@ -211,11 +199,9 @@ public class ParserOtimizado {
       String msg = "Abre parenteses esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
-    // this.getNextToken();
     T();
-    if (this.primeiroFator()) {
+    if (this.isPrimaryFactor()) {
       El();
-      // expRelacional();
     } else {
       String msg = "Expressão relacional esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
@@ -229,7 +215,7 @@ public class ParserOtimizado {
       String msg = "Ponto e virgula esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
-    this.getNextToken();// proximo
+    this.getNextToken();
   }
 
   public void comandoWhile() {
@@ -238,8 +224,6 @@ public class ParserOtimizado {
       String msg = "Abre parenteses esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
-    // this.getNextToken();
-    // this.expRelacional();
 
     T();
     El();
@@ -248,7 +232,6 @@ public class ParserOtimizado {
       String msg = "Fecha parenteses esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
-    this.whileContador++;
     this.getNextToken();
     this.command();
   }
@@ -299,7 +282,7 @@ public class ParserOtimizado {
 
   public void T() {
     this.getNextToken();
-    if (!this.primeiroFator()) {
+    if (!this.isPrimaryFactor()) {
       String msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
@@ -310,11 +293,6 @@ public class ParserOtimizado {
       String msg = "Esperado um OPERADOR";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
-  }
-
-  private boolean isPrimaryType() {
-    return token.getType() == TypeToken.PR_CHAR || token.getType() == TypeToken.PR_FLOAT
-        || token.getType() == TypeToken.PR_INT;
   }
 
   private boolean isCommand() {
@@ -347,10 +325,15 @@ public class ParserOtimizado {
         || token.getType() == TypeToken.MENOR_QUE || token.getType() == TypeToken.MAIOR_QUE;
   }
 
-  public boolean primeiroFator() {
+  public boolean isPrimaryFactor() {
     return token.getType() == TypeToken.ABRE_PARENTESES || token.getType() == TypeToken.IDENTIFICADOR
         || token.getType() == TypeToken.INTEIRO || token.getType() == TypeToken.DECIMAL
         || token.getType() == TypeToken.CARACTER;
+  }
+
+  private boolean isPrimaryType() {
+    return token.getType() == TypeToken.PR_CHAR || token.getType() == TypeToken.PR_FLOAT
+        || token.getType() == TypeToken.PR_INT;
   }
 
 }

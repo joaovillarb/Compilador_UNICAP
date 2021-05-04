@@ -1,7 +1,6 @@
 package projeto_compilador;
 
-import projeto_compilador.parser.ParserNaoOtimizado;
-import projeto_compilador.parser.ParserOtimizado;
+import projeto_compilador.parser.Parser;
 import projeto_compilador.scanner.Scanner;
 
 public class Main {
@@ -18,7 +17,7 @@ public class Main {
 			try {
 
 				Scanner s = new Scanner(fonte);
-				ParserOtimizado p = new ParserOtimizado(s);
+				Parser p = new Parser(s);
 
 				p.init();
 			} catch (Exception e) {
