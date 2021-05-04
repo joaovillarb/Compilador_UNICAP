@@ -70,8 +70,8 @@ public class Parser {
     }
 
     this.getNextToken();
-    recursiva();
-    recursiva2();
+    hasPrimaryType();
+    hasCommand();
 
     if (token.getType() != TypeToken.FECHA_BLOCO) {
       String msg = "Fecha chaves esperado";
@@ -82,23 +82,23 @@ public class Parser {
 
   }
 
-  private void recursiva() {
+  private void hasPrimaryType() {
     if (!this.isPrimaryType()) {
     } else {
       this.declareVariable();
-      recursiva();
+      hasPrimaryType();
     }
   }
 
-  private void recursiva2() {
+  private void hasCommand() {
     if (!this.isCommand()) {
     } else {
       this.command();
-      recursiva2();
+      hasCommand();
     }
   }
 
-  private void recursiva3() {
+  private void hasComma() {
     if (token.getType() != TypeToken.VIRGULA) {
     } else {
       this.getNextToken();
@@ -107,7 +107,7 @@ public class Parser {
         throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
       }
       this.getNextToken();
-      recursiva3();
+      hasComma();
     }
   }
 
@@ -120,25 +120,21 @@ public class Parser {
     }
 
     this.getNextToken();
-    recursiva3();
+    hasComma();
 
     if (token.getType() != TypeToken.PONTO_VIRGULA) {
       String msg = "Ponto e virgula esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
     this.getNextToken();
-
   }
 
   private void command() {
     if (this.isBasicCommand()) {
-      System.out.println("basic command");
       this.basicCommand();
     } else if (this.isIteration()) {
-      System.out.println("iteration");
       this.iteracao();
     } else if (this.isCondition()) {
-      System.out.println("condition");
       this.condicional();
     }
   }
@@ -258,7 +254,6 @@ public class Parser {
       }
       this.getNextToken();
     }
-
   }
 
   private void Al() {
