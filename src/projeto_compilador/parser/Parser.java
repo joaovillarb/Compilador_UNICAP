@@ -77,9 +77,7 @@ public class Parser {
       String msg = "Fecha chaves esperado";
       throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
     }
-
     this.getNextToken();
-
   }
 
   private void hasPrimaryType() {
