@@ -27,6 +27,15 @@ public class Parser {
   }
 
   private void execute() {
+    initial();
+    block();
+    if (token.getType() != TypeToken.ENDFILE) {
+      String msg = "Fim de arquivo esperado";
+      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+    }
+  }
+
+  private void initial() {
     this.getNextToken();
     if (token.getType() != TypeToken.PR_INT) {
       String msg = "Palavra reservada int esperado";
@@ -52,13 +61,6 @@ public class Parser {
     }
 
     this.getNextToken();
-    block();
-
-    if (token.getType() != TypeToken.ENDFILE) {
-      String msg = "Fim de arquivo esperado";
-      throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-    }
-
   }
 
   private void block() {
