@@ -1,5 +1,7 @@
 package projeto_compilador;
 
+import projeto_compilador.parser.Variavel;
+
 public class Token {
 
     private String lexema;
@@ -35,6 +37,17 @@ public class Token {
         this.lexema = lexema;
         this.line = line;
         this.column = column;
+    }
+
+    public TypeToken getTypePalavraReservada(Token token) {
+        if (token.getType() == TypeToken.PR_FLOAT) {
+            return TypeToken.DECIMAL;
+        }else if (token.getType() == TypeToken.PR_INT) {
+            return TypeToken.INTEIRO;
+        } else if (token.getType() == TypeToken.PR_CHAR) {
+            return TypeToken.CARACTER;
+        }
+        return null;
     }
 
     @Override
