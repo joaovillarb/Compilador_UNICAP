@@ -1,30 +1,41 @@
 package projeto_compilador.parser;
 
+import projeto_compilador.Token;
 import projeto_compilador.TypeToken;
 
 public class Variavel {
 
-    private final String nome;
+    private final Token token;
     private final TypeToken tipo;
+    private Token pai;
 
-    public Variavel(String nome, TypeToken tipo) {
-        this.nome = nome;
+    public Variavel(Token token, TypeToken tipo) {
+        this.token = token;
         this.tipo = tipo;
+    }
+
+    public Token getPai() {
+        return pai;
+    }
+
+    public void setPai(Token token) {
+        this.pai = token;
     }
 
     public TypeToken getTipo() {
         return tipo;
     }
 
-    public String getNome() {
-        return nome;
+    public Token getToken() {
+        return token;
     }
 
     @Override
     public String toString() {
         return "Variavel{" +
-                "nome='" + nome + '\'' +
+                token.getLexema() +
                 ", tipo=" + tipo +
+                ", pai=" + pai +
                 '}';
     }
 }

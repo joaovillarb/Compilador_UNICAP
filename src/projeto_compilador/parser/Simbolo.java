@@ -1,5 +1,7 @@
 package projeto_compilador.parser;
 
+import projeto_compilador.Token;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,4 +21,5 @@ public class Simbolo {
     public void adicionar(Variavel variavel) {
         this.variaveis.add(variavel);
     }
+
 }

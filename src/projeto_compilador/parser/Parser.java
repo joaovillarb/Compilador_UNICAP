@@ -5,15 +5,20 @@ import projeto_compilador.TypeToken;
 import projeto_compilador.exceptions.ErrorSyntaxException;
 import projeto_compilador.scanner.Scanner;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Parser {
 
     private final Scanner scanner;
     private Simbolo simbolo;
     private Token token;
+    private List<Variavel> variaveisDeclaradas;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
         this.simbolo = new Simbolo();
+        this.variaveisDeclaradas = new ArrayList<>();
     }
 
     public void init() {
@@ -30,7 +35,7 @@ public class Parser {
     private void execute() {
         initial();
 
-        this.simbolo.adicionar(new Variavel(token.getLexema(), TypeToken.ABRE_BLOCO));
+        this.simbolo.adicionar(new Variavel(token, TypeToken.ABRE_BLOCO));
         System.out.println(simbolo.getVariaveis());
 
         block();
@@ -110,8 +115,8 @@ public class Parser {
                 String msg = "Identificador esperado";
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
             }
-            this.simbolo.adicionar(new Variavel(token.getLexema(), token.getTypePalavraReservada(auxToken)));
-            System.out.println(simbolo.getVariaveis());
+            variaveisDeclaradas.add(new Variavel(token, token.getTypePalavraReservada(auxToken)));
+            System.out.println(variaveisDeclaradas);
             this.getNextToken();
             hasComma(auxToken);
         }
@@ -126,8 +131,8 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
-        this.simbolo.adicionar(new Variavel(token.getLexema(), token.getTypePalavraReservada(auxToken)));
-        System.out.println(simbolo.getVariaveis());
+        variaveisDeclaradas.add(new Variavel(token, token.getTypePalavraReservada(auxToken)));
+        System.out.println(variaveisDeclaradas);
 
         this.getNextToken();
         hasComma(auxToken);
@@ -254,12 +259,25 @@ public class Parser {
     }
 
     private void attribution() {
+        Token ladoEsquerdo = this.token;
+
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
             T();
 
-            this.simbolo.adicionar(new Variavel(token.getLexema(), token.getType()));
-            System.out.println("teste - "+simbolo.getVariaveis());
+            Variavel variavel = this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
+            variavel.setPai(ladoEsquerdo);
+            System.out.println("VARIAVEL - " + variavel);
+
+            variaveisDeclaradas.forEach(e->{
+                System.out.println(e.getToken());
+                System.out.println(ladoEsquerdo);
+//
+//                if(e.getToken() == ladoEsquerdo){
+//                    System.out.println("É IGUAL");
+//                }
+            });
+
 
             Al();
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
@@ -275,10 +293,16 @@ public class Parser {
         if (token.getType() != TypeToken.PONTO_VIRGULA) {
             OP();
             T();
-            this.simbolo.adicionar(new Variavel(token.getLexema(), token.getType()));
-            System.out.println("teste - "+simbolo.getVariaveis());
+
+//            Variavel variavel = this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
+//            variavel.setPai(ladoEsquerdo);
+//
+//            System.out.println("LADO ESQUERDO AL - " + ladoEsquerdo);
+//            System.out.println("VARIAVEL AL - " + variavel);
+
             Al();
         }
+
     }
 
     public void El() {
@@ -298,6 +322,8 @@ public class Parser {
             String msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
+        Variavel variavel = new Variavel(token, token.getType());
+        this.simbolo.adicionar(variavel);
     }
 
     public void OP() {

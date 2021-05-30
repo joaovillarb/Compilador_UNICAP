@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Compilador_UNICAP.iml" filepath="$PROJECT_DIR$/Compilador_UNICAP.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Faculdade/Compilador_Unicap1/Compilador_Unicap1.iml" filepath="$PROJECT_DIR$/../Faculdade/Compilador_Unicap1/Compilador_Unicap1.iml" />
     </modules>
   </component>
 </project>
