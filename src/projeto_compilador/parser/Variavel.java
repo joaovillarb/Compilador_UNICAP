@@ -33,7 +33,7 @@ public class Variavel {
     @Override
     public String toString() {
         return "Variavel{" +
-                token.getLexema() +
+                token +
                 ", tipo=" + tipo +
                 ", pai=" + pai +
                 '}';

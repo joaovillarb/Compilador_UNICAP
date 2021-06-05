@@ -7,6 +7,7 @@ import projeto_compilador.scanner.Scanner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class Parser {
 
@@ -265,21 +266,16 @@ public class Parser {
         if (token.getType() == TypeToken.ATRIBUICAO) {
             T();
 
-            Variavel variavel = this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
-            variavel.setPai(ladoEsquerdo);
-            System.out.println("VARIAVEL - " + variavel);
+            Variavel ultimoPaiDoTipo = calcularUltimoPai(ladoEsquerdo);
 
-            variaveisDeclaradas.forEach(e->{
-                System.out.println(e.getToken());
-                System.out.println(ladoEsquerdo);
-//
-//                if(e.getToken() == ladoEsquerdo){
-//                    System.out.println("É IGUAL");
-//                }
-            });
+            if(ultimoPaiDoTipo == null){
+                String msg = "Variavel não declarada";
+                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            }
 
+            calcularPaiVariavel(ultimoPaiDoTipo);
 
-            Al();
+            Al(ultimoPaiDoTipo);
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 String msg = "Ponto e virgula esperado";
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
@@ -288,21 +284,47 @@ public class Parser {
         }
     }
 
-    private void Al() {
+    private void calcularPaiVariavel(Variavel ultimoPaiDoTipo) {
+        getUltimaVariavelAdicionada().setPai(ultimoPaiDoTipo.getToken());
+
+        if (!verificarTipo(ultimoPaiDoTipo)){
+            String msg = "Tipagem incorreta";
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+        }
+    }
+
+    private Variavel getUltimaVariavelAdicionada() {
+        return this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
+    }
+
+    private Variavel calcularUltimoPai(Token ladoEsquerdo) {
+        Stream<Variavel> variavelStream = variaveisDeclaradas.stream().filter(f -> f.getToken().getLexema().equals(ladoEsquerdo.getLexema()));
+        return variavelStream.reduce((first, second) -> second).orElse(null);
+    }
+
+    private void Al(Variavel ultimoPaiDoTipo) {
         this.getNextToken();
         if (token.getType() != TypeToken.PONTO_VIRGULA) {
             OP();
             T();
 
-//            Variavel variavel = this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
-//            variavel.setPai(ladoEsquerdo);
-//
-//            System.out.println("LADO ESQUERDO AL - " + ladoEsquerdo);
-//            System.out.println("VARIAVEL AL - " + variavel);
+            if(ultimoPaiDoTipo == null){
+                String msg = "Variavel não declarada";
+                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            }
 
-            Al();
+            calcularPaiVariavel(ultimoPaiDoTipo);
+
+            Al(ultimoPaiDoTipo);
         }
 
+    }
+
+    private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
+        Variavel ultimaVariavelAdicionada = getUltimaVariavelAdicionada();
+        if(ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
+            ultimaVariavelAdicionada = calcularUltimoPai(ultimaVariavelAdicionada.getToken());
+        return ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo() || (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO && ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL);
     }
 
     public void El() {
