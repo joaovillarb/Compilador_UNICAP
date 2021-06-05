@@ -7,19 +7,22 @@ import projeto_compilador.scanner.Scanner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class Parser {
 
     private final Scanner scanner;
-    private Simbolo simbolo;
+    private final Simbolo simbolo;
+    private final List<Variavel> variaveisDeclaradas;
+    private int escopo;
     private Token token;
-    private List<Variavel> variaveisDeclaradas;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
         this.simbolo = new Simbolo();
         this.variaveisDeclaradas = new ArrayList<>();
+        this.escopo = 0;
     }
 
     public void init() {
@@ -36,8 +39,6 @@ public class Parser {
     private void execute() {
         initial();
 
-        this.simbolo.adicionar(new Variavel(token, TypeToken.ABRE_BLOCO));
-        System.out.println(simbolo.getVariaveis());
 
         block();
         if (token.getType() != TypeToken.ENDFILE) {
@@ -47,6 +48,7 @@ public class Parser {
 
         this.simbolo.getVariaveis().remove(0);
         System.out.println(simbolo.getVariaveis());
+
 
     }
 
@@ -84,6 +86,10 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
+        this.escopo++;
+        this.simbolo.adicionar(new Variavel(this.token, TypeToken.ABRE_BLOCO, this.escopo));
+        System.out.println(simbolo.getVariaveis());
+
         this.getNextToken();
         hasPrimaryType();
         hasCommand();
@@ -93,6 +99,7 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
         this.getNextToken();
+        this.escopo--;
     }
 
     private void hasPrimaryType() {
@@ -116,8 +123,9 @@ public class Parser {
                 String msg = "Identificador esperado";
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
             }
-            variaveisDeclaradas.add(new Variavel(token, token.getTypePalavraReservada(auxToken)));
-            System.out.println(variaveisDeclaradas);
+
+            calcularDeclaracaoVariavel(auxToken);
+
             this.getNextToken();
             hasComma(auxToken);
         }
@@ -132,8 +140,7 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
-        variaveisDeclaradas.add(new Variavel(token, token.getTypePalavraReservada(auxToken)));
-        System.out.println(variaveisDeclaradas);
+        calcularDeclaracaoVariavel(auxToken);
 
         this.getNextToken();
         hasComma(auxToken);
@@ -143,6 +150,22 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
         this.getNextToken();
+    }
+
+    private void calcularDeclaracaoVariavel(Token auxToken) {
+        Variavel variavel = new Variavel(this.token, token.getTypePalavraReservada(auxToken), this.escopo);
+
+        Optional<Variavel> any = variaveisDeclaradas.stream().filter(
+                f -> f.getEscopo() == this.escopo && f.getToken().getLexema().equals(variavel.getToken().getLexema())
+        ).findAny();
+
+        if(any.isPresent()){
+            String msg = "Lexema já declarado";
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+        }
+
+        variaveisDeclaradas.add(variavel);
+        System.out.println(variaveisDeclaradas);
     }
 
     private void command() {
@@ -265,16 +288,8 @@ public class Parser {
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
             T();
-
-            Variavel ultimoPaiDoTipo = calcularUltimoPai(ladoEsquerdo);
-
-            if(ultimoPaiDoTipo == null){
-                String msg = "Variavel não declarada";
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-            }
-
-            calcularPaiVariavel(ultimoPaiDoTipo);
-
+            Variavel ultimoPaiDoTipo = calcularPai(ladoEsquerdo);
+            verificarVariavel(ultimoPaiDoTipo);
             Al(ultimoPaiDoTipo);
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 String msg = "Ponto e virgula esperado";
@@ -284,20 +299,24 @@ public class Parser {
         }
     }
 
-    private void calcularPaiVariavel(Variavel ultimoPaiDoTipo) {
-        getUltimaVariavelAdicionada().setPai(ultimoPaiDoTipo.getToken());
+    private void verificarVariavel(Variavel ultimoPaiDoTipo) {
+        if (ultimoPaiDoTipo == null) {
+            String msg = "Variavel não declarada";
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+        }
 
-        if (!verificarTipo(ultimoPaiDoTipo)){
+        if (!verificarTipo(ultimoPaiDoTipo)) {
             String msg = "Tipagem incorreta";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
     }
 
-    private Variavel getUltimaVariavelAdicionada() {
+    private Variavel getLastSimbolo() {
         return this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
     }
 
-    private Variavel calcularUltimoPai(Token ladoEsquerdo) {
+//    metodo para descobrir quem declarou essa variavel (quem eh o pai)
+    private Variavel calcularPai(Token ladoEsquerdo) {
         Stream<Variavel> variavelStream = variaveisDeclaradas.stream().filter(f -> f.getToken().getLexema().equals(ladoEsquerdo.getLexema()));
         return variavelStream.reduce((first, second) -> second).orElse(null);
     }
@@ -308,12 +327,7 @@ public class Parser {
             OP();
             T();
 
-            if(ultimoPaiDoTipo == null){
-                String msg = "Variavel não declarada";
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-            }
-
-            calcularPaiVariavel(ultimoPaiDoTipo);
+            verificarVariavel(ultimoPaiDoTipo);
 
             Al(ultimoPaiDoTipo);
         }
@@ -321,9 +335,9 @@ public class Parser {
     }
 
     private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
-        Variavel ultimaVariavelAdicionada = getUltimaVariavelAdicionada();
-        if(ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
-            ultimaVariavelAdicionada = calcularUltimoPai(ultimaVariavelAdicionada.getToken());
+        Variavel ultimaVariavelAdicionada = getLastSimbolo();
+        if (ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
+            ultimaVariavelAdicionada = calcularPai(ultimaVariavelAdicionada.getToken());
         return ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo() || (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO && ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL);
     }
 
@@ -344,7 +358,7 @@ public class Parser {
             String msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
-        Variavel variavel = new Variavel(token, token.getType());
+        Variavel variavel = new Variavel(this.token, token.getType(), this.escopo);
         this.simbolo.adicionar(variavel);
     }
 
