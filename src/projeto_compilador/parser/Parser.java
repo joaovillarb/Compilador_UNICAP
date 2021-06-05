@@ -159,7 +159,7 @@ public class Parser {
                 f -> f.getEscopo() == this.escopo && f.getToken().getLexema().equals(variavel.getToken().getLexema())
         ).findAny();
 
-        if(any.isPresent()){
+        if (any.isPresent()) {
             String msg = "Lexema já declarado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
@@ -315,7 +315,7 @@ public class Parser {
         return this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
     }
 
-//    metodo para descobrir quem declarou essa variavel (quem eh o pai)
+    //    metodo para descobrir quem declarou essa variavel (quem eh o pai)
     private Variavel calcularPai(Token ladoEsquerdo) {
         Stream<Variavel> variavelStream = variaveisDeclaradas.stream().filter(f -> f.getToken().getLexema().equals(ladoEsquerdo.getLexema()));
         return variavelStream.reduce((first, second) -> second).orElse(null);

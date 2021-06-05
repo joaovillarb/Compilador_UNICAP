@@ -7,21 +7,12 @@ public class Variavel {
 
     private final Token token;
     private final TypeToken tipo;
-    private Token pai;
-    private int escopo;
+    private final int escopo;
 
     public Variavel(Token token, TypeToken tipo, int escopo) {
         this.token = token;
         this.tipo = tipo;
         this.escopo = escopo;
-    }
-
-    public Token getPai() {
-        return pai;
-    }
-
-    public void setPai(Token token) {
-        this.pai = token;
     }
 
     public TypeToken getTipo() {
@@ -41,7 +32,6 @@ public class Variavel {
         return "Variavel{" +
                 token.getLexema() +
                 ", tipo=" + tipo +
-                ", pai=" + pai +
                 ", escopo=" + escopo +
                 '}';
     }
