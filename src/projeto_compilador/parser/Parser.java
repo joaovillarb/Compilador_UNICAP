@@ -288,9 +288,9 @@ public class Parser {
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
             T();
-            Variavel ultimoPaiDoTipo = calcularPai(ladoEsquerdo);
-            verificarVariavel(ultimoPaiDoTipo);
-            Al(ultimoPaiDoTipo);
+            Variavel calcularPai = calcularPai(ladoEsquerdo);
+            verificarVariavel(calcularPai);
+            Al(calcularPai);
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 String msg = "Ponto e virgula esperado";
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
@@ -299,13 +299,13 @@ public class Parser {
         }
     }
 
-    private void verificarVariavel(Variavel ultimoPaiDoTipo) {
-        if (ultimoPaiDoTipo == null) {
+    private void verificarVariavel(Variavel calcularPai) {
+        if (calcularPai == null) {
             String msg = "Variavel não declarada";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
-        if (!verificarTipo(ultimoPaiDoTipo)) {
+        if (!verificarTipo(calcularPai)) {
             String msg = "Tipagem incorreta";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
