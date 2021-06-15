@@ -16,12 +16,18 @@ public class Parser {
     private final Simbolo simbolo;
     private final List<Variavel> variaveisDeclaradas;
     private int escopo;
+    private int contador;
+    private int ifContador;
+    private int whileContador;
+    private int doWhileContador;
     private Token token;
+    private List<Token> listaAtrib;
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
         this.simbolo = new Simbolo();
         this.variaveisDeclaradas = new ArrayList<>();
+        this.listaAtrib = new ArrayList<>();
         this.escopo = 0;
     }
 
@@ -33,7 +39,7 @@ public class Parser {
         do {
             token = scanner.getNextToken();
         } while (token.getType() == TypeToken.COMENTARIO);
-        System.out.println(token);
+        //System.out.println(token);
     }
 
     private void execute() {
@@ -47,7 +53,7 @@ public class Parser {
         }
 
         this.simbolo.getVariaveis().remove(0);
-        System.out.println(simbolo.getVariaveis());
+        //System.out.println(simbolo.getVariaveis());
 
 
     }
@@ -88,7 +94,7 @@ public class Parser {
 
         this.escopo++;
         this.simbolo.adicionar(new Variavel(this.token, TypeToken.ABRE_BLOCO, this.escopo));
-        System.out.println(simbolo.getVariaveis());
+       // System.out.println(simbolo.getVariaveis());
 
         this.getNextToken();
         hasPrimaryType();
@@ -165,7 +171,7 @@ public class Parser {
         }
 
         variaveisDeclaradas.add(variavel);
-        System.out.println(variaveisDeclaradas);
+        //System.out.println(variaveisDeclaradas);
     }
 
     private void command() {
@@ -187,8 +193,8 @@ public class Parser {
     }
 
     public void condicional() {
+        int cont = ifContador;
         if (token.getType() == TypeToken.PR_IF) {
-
             this.getNextToken();
             if (token.getType() != TypeToken.ABRE_PARENTESES) {
                 String msg = "Abre parenteses esperado";
@@ -197,6 +203,8 @@ public class Parser {
 
             T();
             El();
+            System.out.println("if " + "T" + contador + " == 0 goto" + " label_else_" + cont);
+            this.ifContador++;
 
             if (token.getType() != TypeToken.FECHA_PARENTESES) {
                 String msg = "Fecha parenteses esperado";
@@ -205,12 +213,14 @@ public class Parser {
 
             this.getNextToken();
             this.command();
+            System.out.println("goto label_fim_if_" + cont);
+            System.out.println("label_else_" + cont + ":");
 
             if (token.getType() == TypeToken.PR_ELSE) {
                 this.getNextToken();
                 this.command();
             }
-
+            System.out.println("label_fim_if_" + cont + ":");
         } else {
             String msg = "Deveria ter um IF aqui";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
@@ -218,6 +228,8 @@ public class Parser {
     }
 
     public void comandoDoWhile() {
+        int cont = doWhileContador;
+        System.out.println("label_doWhile_inicio_" + cont);
         this.getNextToken();
         if (!this.isCommand()) {
             String msg = "Deveria ter um comando aqui";
@@ -253,9 +265,12 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
         this.getNextToken();
+        System.out.println("if T" + contador + " != 0 goto label_doWhile_inicio_" + cont);
     }
 
     public void comandoWhile() {
+        int cont = whileContador;
+        System.out.println("label_while_inicio_" + cont + ":");
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
             String msg = "Abre parenteses esperado";
@@ -263,7 +278,10 @@ public class Parser {
         }
 
         T();
+
         El();
+        System.out.println("if T" + contador + " == 0 goto" + " label_while_fim_" + cont);
+        this.whileContador++;
 
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
             String msg = "Fecha parenteses esperado";
@@ -271,6 +289,8 @@ public class Parser {
         }
         this.getNextToken();
         this.command();
+        System.out.println("goto label_while_inicio_" + cont);
+        System.out.println("label_while_fim_" + cont + ":");
     }
 
     private void basicCommand() {
@@ -291,12 +311,22 @@ public class Parser {
             Variavel calcularPai = calcularPai(ladoEsquerdo);
             verificarVariavel(calcularPai);
             Al(calcularPai);
+//            for (int i=0;i < listaAtrib.size();i+=3) {
+////                ladoEsquerdo.setCodIter("T"+contador);
+//                System.out.println("T"+ contador +" = " + listaAtrib.get(i).getLexema()+" "+listaAtrib.get(i+1).getLexema()+" "+listaAtrib.get(i+2).getLexema());
+//                contador++;
+//
+//                if(i == 12){
+//                    break;
+//                }
+//            }
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 String msg = "Ponto e virgula esperado";
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
             }
             this.getNextToken();
         }
+
     }
 
     private void verificarVariavel(Variavel calcularPai) {
@@ -322,10 +352,22 @@ public class Parser {
     }
 
     private void Al(Variavel ultimoPaiDoTipo) {
+        Token ladoEsq = this.token;
+        listaAtrib.add(ladoEsq);
+        Token operador;
         this.getNextToken();
         if (token.getType() != TypeToken.PONTO_VIRGULA) {
             OP();
+            operador = this.token;
+            listaAtrib.add(operador);
             T();
+            if(operador.getType() == TypeToken.DIVISAO){
+                if(this.token.getType() == TypeToken.INTEIRO && ladoEsq.getType() == TypeToken.INTEIRO && ultimoPaiDoTipo.getTipo() == TypeToken.INTEIRO){
+                    String msg = "Dividindo-se dois inteiros o tipo esperado é FLOAT";
+                    throw new ErrorSyntaxException(ultimoPaiDoTipo.getToken().getLine(), ultimoPaiDoTipo.getToken().getColumn(), msg);
+                }
+            }
+            listaAtrib.add(this.token);
 
             verificarVariavel(ultimoPaiDoTipo);
 
@@ -338,15 +380,21 @@ public class Parser {
         Variavel ultimaVariavelAdicionada = getLastSimbolo();
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
             ultimaVariavelAdicionada = calcularPai(ultimaVariavelAdicionada.getToken());
+//        if(ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO && ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL){
+//            System.out.println(this.newTemp() + " = (float)" + ultimaVariavelAdicionada.getToken().getLexema());
+//        }
         return ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo() || (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO && ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL);
     }
 
     public void El() {
+        Token ladoEsq = this.token;
         this.getNextToken();
         if (token != null) {
             if (token.getType() != TypeToken.FECHA_PARENTESES) {
                 OP();
+                Token operador = this.token;
                 T();
+                System.out.println(this.newTemp() + " = " + ladoEsq.getLexema() +  operador.getLexema() + this.token.getLexema());
                 El();
             }
         }
@@ -368,6 +416,8 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
     }
+
+    private String newTemp() {this.contador++; return "T" + this.contador;}
 
     private boolean isCommand() {
         return this.isIteration() || this.isBasicCommand() || this.isCondition();

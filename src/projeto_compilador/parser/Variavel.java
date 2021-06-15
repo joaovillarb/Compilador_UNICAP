@@ -8,6 +8,15 @@ public class Variavel {
     private final Token token;
     private final TypeToken tipo;
     private final int escopo;
+    private String codIter;
+
+    public String getCodIter() {
+        return codIter;
+    }
+
+    public void setCodIter(String codIter) {
+        this.codIter = codIter;
+    }
 
     public Variavel(Token token, TypeToken tipo, int escopo) {
         this.token = token;

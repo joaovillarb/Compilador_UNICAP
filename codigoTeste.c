@@ -3,6 +3,7 @@ int main() {
        float h;int c;float w,k,a;
        char hj;
        float sdd;
+
        k = x;
        w = 5/x+y*8+5* 7;
        /** /** /*
@@ -11,7 +12,12 @@ int main() {
 
        hj = 'a'+'b';
 
+
+
+      c = 20*30;
+
         do{
+
 
 
            w = w + 1;

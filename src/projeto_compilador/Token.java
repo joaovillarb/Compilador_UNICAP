@@ -8,6 +8,15 @@ public class Token {
     private TypeToken type;
     private int line;
     private int column;
+    private String codIter;
+
+    public String getCodIter() {
+        return codIter;
+    }
+
+    public void setCodIter(String codIter) {
+        this.codIter = codIter;
+    }
 
     public TypeToken getType() {
         return this.type;
