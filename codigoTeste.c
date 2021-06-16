@@ -1,11 +1,8 @@
 int main() {
-   int x,y,z;
-   char a;
-   x = 1;
-   y = 2+6;
-   z=3+4+5;
-    a  = 'b';
+    int x;
+    int y;
+
+    x=10*2+2+3;
+    y=2;
+
 }
-
-
-

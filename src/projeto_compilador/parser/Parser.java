@@ -15,6 +15,7 @@ public class Parser {
     private static final String ABRE_PARENTESES_ESPERADO = "Abre parenteses esperado";
     private static final String FECHA_PARENTESES_ESPERADO = "Fecha parenteses esperado";
     private static final String PONTO_E_VIRGULA_ESPERADO = "Ponto e virgula esperado";
+
     private final Scanner scanner;
     private final Simbolo simbolo;
     private final Atribuicoes atrib;
@@ -292,23 +293,36 @@ public class Parser {
             T();
             Variavel calcularPai = calcularPai(ladoEsquerdo);
             verificarVariavel(calcularPai);
+
             var ultimaVariavelAdicionada = getLastSimbolo();
-            atrib.adicionar(ultimaVariavelAdicionada);
+            atrib.adicionar(this.token);
             atribuicaoLogica(calcularPai);
-            if (atrib.getSize() == 1) {
+
+            if (atrib.getOperador().size() == 1) {
                 if (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO || ultimaVariavelAdicionada.getTipo() == TypeToken.DECIMAL) {
                     ladoEsquerdo.setCodIter("T" + contador);
-                    System.out.println(this.newTemp() + " = (float)" + ladoEsquerdo.getLexema());
-                }else{
+                    System.out.println(this.newTemp() + " = (float)" + ultimaVariavelAdicionada.getToken().getLexema());
+                } else {
                     System.out.println(this.newTemp() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
                 }
             } else {
-                atrib.getAtribuicao().forEach(t -> {
-                    System.out.println(this.newTemp() + " = (float)" + t.getToken().getLexema());
-                });
+                String loop = null;
+                Token op = null;
+
+                for (Token t : atrib.getOperador()) {
+                    if (loop == null) {
+                        loop = t.getLexema();
+                    } else if (isOperadorRelacional(t) || this.isExpressaoArit(t) || this.isExpressaoTermo(t)) {
+                        op = t;
+                    } else {
+                        System.out.println(this.newTemp() + " = " + loop + " "+ op.getLexema() +" "+t.getLexema());
+                        ladoEsquerdo.setCodIter("T" + contador);
+                        loop = ladoEsquerdo.getCodIter();
+                    }
+                }
             }
-            System.out.println(atrib.getAtribuicao());
-            atrib.getAtribuicao().clear();
+//            System.out.println(atrib.getOperador());
+            atrib.getOperador().clear();
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
             }
@@ -358,7 +372,7 @@ public class Parser {
         verificarVariavel(ultimoPaiDoTipo);
         var ultimaVariavelAdicionada = getLastSimbolo();
         atrib.adicionar(operador);
-        atrib.adicionar(ultimaVariavelAdicionada);
+        atrib.adicionar(this.token);
 
         atribuicaoLogica(ultimoPaiDoTipo);
 
@@ -393,7 +407,7 @@ public class Parser {
     }
 
     public Token identificarOperador() {
-        if (!isOperadorRelacional() && !this.isExpressaoArit() && !this.isExpressaoTermo()) {
+        if (!isOperadorRelacional(this.token) && !this.isExpressaoArit(this.token) && !this.isExpressaoTermo(this.token)) {
             var msg = "Esperado um OPERADOR";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
@@ -421,15 +435,15 @@ public class Parser {
         return token.getType() == TypeToken.IDENTIFICADOR || token.getType() == TypeToken.ABRE_BLOCO;
     }
 
-    private boolean isExpressaoArit() {
+    private boolean isExpressaoArit(Token token) {
         return token.getType() == TypeToken.SOMA || token.getType() == TypeToken.SUBTRACAO;
     }
 
-    private boolean isExpressaoTermo() {
+    private boolean isExpressaoTermo(Token token) {
         return token.getType() == TypeToken.MULTIPLICAO || token.getType() == TypeToken.DIVISAO;
     }
 
-    private boolean isOperadorRelacional() {
+    private boolean isOperadorRelacional(Token token) {
         return token.getType() == TypeToken.IGUALDADE || token.getType() == TypeToken.DIFERENCA
                 || token.getType() == TypeToken.MAIOR_IGUAL || token.getType() == TypeToken.MENOR_IGUAL
                 || token.getType() == TypeToken.MENOR_QUE || token.getType() == TypeToken.MAIOR_QUE;
