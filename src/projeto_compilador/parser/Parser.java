@@ -17,6 +17,9 @@ public class Parser {
     private final List<Variavel> variaveisDeclaradas;
     private int escopo;
     private Token token;
+    private static final String ABRE_PARENTESES_ESPERADO = "Abre parenteses esperado";
+    private static final String FECHA_PARENTESES_ESPERADO = "Fecha parenteses esperado";
+    private static final String PONTO_E_VIRGULA_ESPERADO = "Ponto e virgula esperado";
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
@@ -26,7 +29,7 @@ public class Parser {
     }
 
     public void init() {
-        execute();
+        executar();
     }
 
     private void getNextToken() {
@@ -36,53 +39,46 @@ public class Parser {
         System.out.println(token);
     }
 
-    private void execute() {
-        initial();
-
-
-        block();
+    private void executar() {
+        inicializar();
+        bloco();
         if (token.getType() != TypeToken.ENDFILE) {
-            String msg = "Fim de arquivo esperado";
+            var msg = "Fim de arquivo esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
-
         this.simbolo.getVariaveis().remove(0);
         System.out.println(simbolo.getVariaveis());
-
-
     }
 
-    private void initial() {
+    private void inicializar() {
         this.getNextToken();
         if (token.getType() != TypeToken.PR_INT) {
-            String msg = "Palavra reservada int esperado";
+            var msg = "Palavra reservada int esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.PR_MAIN) {
-            String msg = "Palavra reservada main esperado";
+            var msg = "Palavra reservada main esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
-            String msg = "Abre parenteses esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            String msg = "Fecha parenteses esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
         }
 
         this.getNextToken();
     }
 
-    private void block() {
+    private void bloco() {
         if (token.getType() != TypeToken.ABRE_BLOCO) {
-            String msg = "Abre chaves esperado";
+            var msg = "Abre chaves esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
@@ -91,76 +87,66 @@ public class Parser {
         System.out.println(simbolo.getVariaveis());
 
         this.getNextToken();
-        hasPrimaryType();
-        hasCommand();
+        enquantoTemTipoPrimario();
+        enquantoTemComando();
 
         if (token.getType() != TypeToken.FECHA_BLOCO) {
-            String msg = "Fecha chaves esperado";
+            var msg = "Fecha chaves esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
         this.getNextToken();
         this.escopo--;
     }
 
-    private void hasPrimaryType() {
-        if (this.isPrimaryType()) {
-            this.declareVariable();
-            hasPrimaryType();
-        }
+    private void enquantoTemTipoPrimario() {
+        if (!this.isTipoPrimario()) return;
+        this.declararVariavel();
+        enquantoTemTipoPrimario();
     }
 
-    private void hasCommand() {
-        if (this.isCommand()) {
-            this.command();
-            hasCommand();
-        }
+    private void enquantoTemComando() {
+        if (!this.isComando())return;
+        this.comando();
+        enquantoTemComando();
     }
 
-    private void hasComma(Token auxToken) {
-        if (token.getType() == TypeToken.VIRGULA) {
-            this.getNextToken();
-            if (token.getType() != TypeToken.IDENTIFICADOR) {
-                String msg = "Identificador esperado";
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-            }
-
-            calcularDeclaracaoVariavel(auxToken);
-
-            this.getNextToken();
-            hasComma(auxToken);
-        }
+    private void temVirgula(Token auxToken) {
+        if (token.getType() == TypeToken.VIRGULA) getIdentificador(auxToken);
     }
 
-    private void declareVariable() {
-        Token auxToken = this.token;
+    private void declararVariavel() {
+        var auxToken = this.token;
 
+        getIdentificador(auxToken);
+
+        if (token.getType() != TypeToken.PONTO_VIRGULA) {
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
+        }
+        this.getNextToken();
+    }
+
+    private void getIdentificador(Token auxToken) {
         this.getNextToken();
         if (token.getType() != TypeToken.IDENTIFICADOR) {
-            String msg = "Identificador esperado";
+            var msg = "Identificador esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
         calcularDeclaracaoVariavel(auxToken);
 
         this.getNextToken();
-        hasComma(auxToken);
-
-        if (token.getType() != TypeToken.PONTO_VIRGULA) {
-            String msg = "Ponto e virgula esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
-        }
-        this.getNextToken();
+        temVirgula(auxToken);
     }
 
     private void calcularDeclaracaoVariavel(Token auxToken) {
-        Variavel variavel = new Variavel(this.token, token.getTypePalavraReservada(auxToken), this.escopo);
+        var variavel = new Variavel(this.token, token.getTypePalavraReservada(auxToken), this.escopo);
 
         Optional<Variavel> any = variaveisDeclaradas.stream().filter(
                 f -> f.getEscopo() == this.escopo && f.getToken().getLexema().equals(variavel.getToken().getLexema())
         ).findAny();
 
         if (any.isPresent()) {
-            String msg = "Lexema já declarado";
+            var msg = "Lexema já declarado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
@@ -168,12 +154,12 @@ public class Parser {
         System.out.println(variaveisDeclaradas);
     }
 
-    private void command() {
-        if (this.isBasicCommand()) {
+    private void comando() {
+        if (this.isIdentificadorOuAbreBloco()) {
             this.basicCommand();
-        } else if (this.isIteration()) {
+        } else if (this.isIteracao()) {
             this.iteracao();
-        } else if (this.isCondition()) {
+        } else if (this.isCondicao()) {
             this.condicional();
         }
     }
@@ -191,66 +177,61 @@ public class Parser {
 
             this.getNextToken();
             if (token.getType() != TypeToken.ABRE_PARENTESES) {
-                String msg = "Abre parenteses esperado";
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
             }
 
-            T();
+            getProximoToken();
             El();
 
             if (token.getType() != TypeToken.FECHA_PARENTESES) {
-                String msg = "Fecha parenteses esperado";
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
             }
 
             this.getNextToken();
-            this.command();
+            this.comando();
 
             if (token.getType() == TypeToken.PR_ELSE) {
                 this.getNextToken();
-                this.command();
+                this.comando();
             }
 
         } else {
-            String msg = "Deveria ter um IF aqui";
+            var msg = "Deveria ter um IF aqui";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
     }
 
     public void comandoDoWhile() {
         this.getNextToken();
-        if (!this.isCommand()) {
-            String msg = "Deveria ter um comando aqui";
+        if (!this.isComando()) {
+            var msg = "Deveria ter um comando aqui";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
-        this.command();
+        this.comando();
 
         if (token.getType() != TypeToken.PR_WHILE) {
-            String msg = "Palavra reservada while esperado";
+            var msg = "Palavra reservada while esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
-            String msg = "Abre parenteses esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
-        T();
-        if (this.isPrimaryFactor()) {
+        getProximoToken();
+        if (this.isPrimeiroFator()) {
             El();
         } else {
-            String msg = "Expressão relacional esperado";
+            var msg = "Expressão relacional esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            String msg = "Fecha parenteses esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
         }
         this.getNextToken();
         if (token.getType() != TypeToken.PONTO_VIRGULA) {
-            String msg = "Ponto e virgula esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
         }
         this.getNextToken();
     }
@@ -258,42 +239,39 @@ public class Parser {
     public void comandoWhile() {
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
-            String msg = "Abre parenteses esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
 
-        T();
+        getProximoToken();
         El();
 
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            String msg = "Fecha parenteses esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
         }
         this.getNextToken();
-        this.command();
+        this.comando();
     }
 
     private void basicCommand() {
         if (token.getType() == TypeToken.IDENTIFICADOR) {
-            this.attribution();
+            this.atribuicao();
 
         } else if (token.getType() == TypeToken.ABRE_BLOCO) {
-            this.block();
+            this.bloco();
         }
     }
 
-    private void attribution() {
+    private void atribuicao() {
         Token ladoEsquerdo = this.token;
 
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
-            T();
+            getProximoToken();
             Variavel calcularPai = calcularPai(ladoEsquerdo);
             verificarVariavel(calcularPai);
-            Al(calcularPai);
+            atribuicaoLogica(calcularPai);
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
-                String msg = "Ponto e virgula esperado";
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
             }
             this.getNextToken();
         }
@@ -301,12 +279,12 @@ public class Parser {
 
     private void verificarVariavel(Variavel calcularPai) {
         if (calcularPai == null) {
-            String msg = "Variavel não declarada";
+            var msg = "Variavel não declarada";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
 
         if (!verificarTipo(calcularPai)) {
-            String msg = "Tipagem incorreta";
+            var msg = "Tipagem incorreta";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
     }
@@ -321,91 +299,89 @@ public class Parser {
         return variavelStream.reduce((first, second) -> second).orElse(null);
     }
 
-    private void Al(Variavel ultimoPaiDoTipo) {
+    private void atribuicaoLogica(Variavel ultimoPaiDoTipo) {
         this.getNextToken();
-        if (token.getType() != TypeToken.PONTO_VIRGULA) {
-            OP();
-            T();
+        if (token.getType() == TypeToken.PONTO_VIRGULA) return;
 
-            verificarVariavel(ultimoPaiDoTipo);
+        identificarOperador();
+        getProximoToken();
 
-            Al(ultimoPaiDoTipo);
-        }
+        verificarVariavel(ultimoPaiDoTipo);
+
+        atribuicaoLogica(ultimoPaiDoTipo);
 
     }
 
     private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
-        Variavel ultimaVariavelAdicionada = getLastSimbolo();
+        var ultimaVariavelAdicionada = getLastSimbolo();
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
             ultimaVariavelAdicionada = calcularPai(ultimaVariavelAdicionada.getToken());
-        return ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo() || (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO && ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL);
+        return (ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo()) || ((ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO) && (ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL));
     }
 
-    public void El() {
+    private void El() {
         this.getNextToken();
-        if (token != null) {
-            if (token.getType() != TypeToken.FECHA_PARENTESES) {
-                OP();
-                T();
-                El();
-            }
+        if (token != null && token.getType() != TypeToken.FECHA_PARENTESES) {
+            identificarOperador();
+            getProximoToken();
+            El();
         }
     }
 
-    public void T() {
+    public void getProximoToken() {
         this.getNextToken();
-        if (!this.isPrimaryFactor()) {
-            String msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
+        if (!this.isPrimeiroFator()) {
+            var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
-        Variavel variavel = new Variavel(this.token, token.getType(), this.escopo);
+        var variavel = new Variavel(this.token, token.getType(), this.escopo);
         this.simbolo.adicionar(variavel);
     }
 
-    public void OP() {
-        if (!isRelationalOperator() && !this.isAritExpression() && !this.isTermExpression()) {
-            String msg = "Esperado um OPERADOR";
+    public void identificarOperador() {
+        if (!isOperadorRelacional() && !this.isExpressaoArit() && !this.isExpressaoTermo()) {
+            var msg = "Esperado um OPERADOR";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
         }
     }
 
-    private boolean isCommand() {
-        return this.isIteration() || this.isBasicCommand() || this.isCondition();
+    private boolean isComando() {
+        return this.isIteracao() || this.isIdentificadorOuAbreBloco() || this.isCondicao();
     }
 
-    private boolean isCondition() {
+    private boolean isCondicao() {
         return token.getType() == TypeToken.PR_IF;
     }
 
-    private boolean isIteration() {
+    private boolean isIteracao() {
         return token.getType() == TypeToken.PR_WHILE || token.getType() == TypeToken.PR_DO;
     }
 
-    private boolean isBasicCommand() {
+    private boolean isIdentificadorOuAbreBloco() {
         return token.getType() == TypeToken.IDENTIFICADOR || token.getType() == TypeToken.ABRE_BLOCO;
     }
 
-    private boolean isAritExpression() {
+    private boolean isExpressaoArit() {
         return token.getType() == TypeToken.SOMA || token.getType() == TypeToken.SUBTRACAO;
     }
 
-    private boolean isTermExpression() {
+    private boolean isExpressaoTermo() {
         return token.getType() == TypeToken.MULTIPLICAO || token.getType() == TypeToken.DIVISAO;
     }
 
-    private boolean isRelationalOperator() {
+    private boolean isOperadorRelacional() {
         return token.getType() == TypeToken.IGUALDADE || token.getType() == TypeToken.DIFERENCA
                 || token.getType() == TypeToken.MAIOR_IGUAL || token.getType() == TypeToken.MENOR_IGUAL
                 || token.getType() == TypeToken.MENOR_QUE || token.getType() == TypeToken.MAIOR_QUE;
     }
 
-    public boolean isPrimaryFactor() {
+    public boolean isPrimeiroFator() {
         return token.getType() == TypeToken.ABRE_PARENTESES || token.getType() == TypeToken.IDENTIFICADOR
                 || token.getType() == TypeToken.INTEIRO || token.getType() == TypeToken.DECIMAL
                 || token.getType() == TypeToken.CARACTER;
     }
 
-    private boolean isPrimaryType() {
+    private boolean isTipoPrimario() {
         return token.getType() == TypeToken.PR_CHAR || token.getType() == TypeToken.PR_FLOAT
                 || token.getType() == TypeToken.PR_INT;
     }

@@ -15,8 +15,8 @@ public enum TypeToken {
 	PR_ELSE(33, "PALAVRA RESERVADA ELSE"), PR_IF(34, "PALAVRA RESERVADA IF"), PR_MAIN(35, "PALAVRA RESERVADA MAIN"),
 	ABRE_COLCHETE(36, "ABERTURA DE COLCHETE ([)"), FECHA_COLCHETE(37, "FECHAMENTO DE COLCHETE (])");
 
-	private String nome;
-	private int classe;
+	private final String nome;
+	private final int classe;
 
 	TypeToken(int classe, String nome) {
 		this.classe = classe;
