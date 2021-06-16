@@ -12,25 +12,29 @@ import java.util.stream.Stream;
 
 public class Parser {
 
+    private static final String ABRE_PARENTESES_ESPERADO = "Abre parenteses esperado";
+    private static final String FECHA_PARENTESES_ESPERADO = "Fecha parenteses esperado";
+    private static final String PONTO_E_VIRGULA_ESPERADO = "Ponto e virgula esperado";
     private final Scanner scanner;
     private final Simbolo simbolo;
+    private final Atribuicoes atrib;
     private final List<Variavel> variaveisDeclaradas;
+    private final List<Variavel> listaAtrib;
+    private final List<Token> listaOperador;
     private int escopo;
     private int contador;
     private int ifContador;
     private int whileContador;
     private int doWhileContador;
     private Token token;
-    private List<Token> listaAtrib;
-    private static final String ABRE_PARENTESES_ESPERADO = "Abre parenteses esperado";
-    private static final String FECHA_PARENTESES_ESPERADO = "Fecha parenteses esperado";
-    private static final String PONTO_E_VIRGULA_ESPERADO = "Ponto e virgula esperado";
 
     public Parser(Scanner scanner) {
         this.scanner = scanner;
         this.simbolo = new Simbolo();
+        this.atrib = new Atribuicoes();
         this.variaveisDeclaradas = new ArrayList<>();
         this.listaAtrib = new ArrayList<>();
+        this.listaOperador = new ArrayList<>();
         this.escopo = 0;
     }
 
@@ -90,7 +94,7 @@ public class Parser {
 
         this.escopo++;
         this.simbolo.adicionar(new Variavel(this.token, TypeToken.ABRE_BLOCO, this.escopo));
-       // System.out.println(simbolo.getVariaveis());
+        // System.out.println(simbolo.getVariaveis());
 
         this.getNextToken();
         enquantoTemTipoPrimario();
@@ -111,7 +115,7 @@ public class Parser {
     }
 
     private void enquantoTemComando() {
-        if (!this.isComando())return;
+        if (!this.isComando()) return;
         this.comando();
         enquantoTemComando();
     }
@@ -186,7 +190,7 @@ public class Parser {
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
             }
 
-            getProximoToken();
+            T();
             El();
             System.out.println("if " + "T" + contador + " == 0 goto" + " label_else_" + cont);
             this.ifContador++;
@@ -201,7 +205,7 @@ public class Parser {
             System.out.println("label_else_" + cont + ":");
 
             if (token.getType() == TypeToken.PR_ELSE) {
-                this.getProximoToken();
+                this.T();
                 this.comando();
             }
             System.out.println("label_fim_if_" + cont + ":");
@@ -231,7 +235,7 @@ public class Parser {
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
-        getProximoToken();
+        T();
         if (this.isPrimeiroFator()) {
             El();
         } else {
@@ -257,7 +261,7 @@ public class Parser {
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
 
-        getProximoToken();
+        T();
         El();
         System.out.println("if T" + contador + " == 0 goto" + " label_while_fim_" + cont);
         this.whileContador++;
@@ -285,19 +289,26 @@ public class Parser {
 
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
-            getProximoToken();
+            T();
             Variavel calcularPai = calcularPai(ladoEsquerdo);
             verificarVariavel(calcularPai);
+            var ultimaVariavelAdicionada = getLastSimbolo();
+            atrib.adicionar(ultimaVariavelAdicionada);
             atribuicaoLogica(calcularPai);
-//            for (int i=0;i < listaAtrib.size();i+=3) {
-////                ladoEsquerdo.setCodIter("T"+contador);
-//                System.out.println("T"+ contador +" = " + listaAtrib.get(i).getLexema()+" "+listaAtrib.get(i+1).getLexema()+" "+listaAtrib.get(i+2).getLexema());
-//                contador++;
-//
-//                if(i == 12){
-//                    break;
-//                }
-//            }
+            if (atrib.getSize() == 1) {
+                if (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO || ultimaVariavelAdicionada.getTipo() == TypeToken.DECIMAL) {
+                    ladoEsquerdo.setCodIter("T" + contador);
+                    System.out.println(this.newTemp() + " = (float)" + ladoEsquerdo.getLexema());
+                }else{
+                    System.out.println(this.newTemp() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
+                }
+            } else {
+                atrib.getAtribuicao().forEach(t -> {
+                    System.out.println(this.newTemp() + " = (float)" + t.getToken().getLexema());
+                });
+            }
+            System.out.println(atrib.getAtribuicao());
+            atrib.getAtribuicao().clear();
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
             }
@@ -334,7 +345,7 @@ public class Parser {
         if (token.getType() == TypeToken.PONTO_VIRGULA) return;
 
         Token operador = identificarOperador();
-        getProximoToken();
+        T();
 
         if (operador.getType() == TypeToken.DIVISAO
                 && this.token.getType() == TypeToken.INTEIRO
@@ -345,6 +356,9 @@ public class Parser {
         }
 
         verificarVariavel(ultimoPaiDoTipo);
+        var ultimaVariavelAdicionada = getLastSimbolo();
+        atrib.adicionar(operador);
+        atrib.adicionar(ultimaVariavelAdicionada);
 
         atribuicaoLogica(ultimoPaiDoTipo);
 
@@ -358,17 +372,17 @@ public class Parser {
     }
 
     private void El() {
-            Token ladoEsq = this.token;
+        Token ladoEsq = this.token;
         this.getNextToken();
         if (token != null && token.getType() != TypeToken.FECHA_PARENTESES) {
             Token operador = identificarOperador();
-            getProximoToken();
-            System.out.println(this.newTemp() + " = " + ladoEsq.getLexema() +  operador.getLexema() + this.token.getLexema());
+            T();
+            System.out.println(this.newTemp() + " = " + ladoEsq.getLexema() + operador.getLexema() + this.token.getLexema());
             El();
         }
     }
 
-    public void getProximoToken() {
+    public void T() {
         this.getNextToken();
         if (!this.isPrimeiroFator()) {
             var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
@@ -386,7 +400,10 @@ public class Parser {
         return this.token;
     }
 
-        private String newTemp() {this.contador++; return "T" + this.contador;}
+    private String newTemp() {
+        this.contador++;
+        return "T" + this.contador;
+    }
 
     private boolean isComando() {
         return this.isIteracao() || this.isIdentificadorOuAbreBloco() || this.isCondicao();
