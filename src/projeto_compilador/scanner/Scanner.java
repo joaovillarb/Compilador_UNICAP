@@ -1,56 +1,53 @@
 package projeto_compilador.scanner;
 
-import java.util.regex.*;
-import java.io.FileNotFoundException;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileReader;
-
+import projeto_compilador.Token;
 import projeto_compilador.TypeToken;
 import projeto_compilador.exceptions.ErrorScannerException;
-import projeto_compilador.Token;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class Scanner {
 
+    private final Pattern especiaisChar = Pattern.compile("[@#$¨?~&]");
     boolean start = true;
-
-    private File arquivo;
     private FileReader reader;
-
     private String lexema;
     private char caractere = ' ';
     private int ascii;
-
     private int line;
     private int column;
 
-    private Pattern especiaisChar = Pattern.compile("[@#$¨?~&]");
-
     public Scanner(String font) {
-        this.lexema = new String();
+        this.lexema = "";
 
         this.column = 1;
         this.line = 1;
 
-        this.arquivo = new File(font);
+        var arquivo = new File(font);
 
         if (!arquivo.exists()) {
             try {
                 arquivo.createNewFile();
             } catch (IOException error) {
-                error.getMessage();
+                System.err.println(error.getMessage());
             }
         }
 
         try {
-            this.reader = new FileReader(this.arquivo);
+            this.reader = new FileReader(arquivo);
         } catch (FileNotFoundException error) {
-            error.getMessage();
+            String errorMessage = error.getMessage();
+            System.out.println(errorMessage);
         }
 
     }
 
-    private void incrementLexema() {
+    private void acumularLexema() {
         this.lexema += this.caractere;
     }
 
@@ -65,15 +62,14 @@ public class Scanner {
         try {
             this.ascii = this.reader.read();
         } catch (IOException error) {
-            error.getMessage();
+            System.out.println(error.getMessage());
         }
 
-        // System.out.println("ascii - " + this.ascii);
         this.caractere = (char) this.ascii;
 
-        Matcher matcher = especiaisChar.matcher(this.caractere + "");
+        var matcher = especiaisChar.matcher(this.caractere + "");
         if (matcher.find()) {
-            String descricao = "\nCARACTERES ESPECIAIS SÃO INVALIDOS\n\n";
+            var descricao = "\nCARACTERES ESPECIAIS SÃO INVALIDOS\n\n";
             throw new ErrorScannerException(getPointer(), this.caractere, descricao);
         }
 
@@ -98,158 +94,153 @@ public class Scanner {
                 }
             }
         }
-        if (this.caractere == '/') {
-            do {
-                this.getNextChar();
-            } while (this.caractere != '\n');
-            return true;
+        if (this.caractere != '/') {
+            return false;
         }
-        return false;
+        do {
+            this.getNextChar();
+        } while (this.caractere != '\n');
+        return true;
     }
 
     private Token getToken() {
         this.lexema = "";
 
-        while (Character.isWhitespace(this.caractere)) {
-            this.getNextChar();
-        }
+        pularEspacosEmBranco();
 
         if (this.isChar(this.caractere)) {
             do {
-                incrementLexemaAndGetNextChar();
+                acumularLexemaEPegarProximoChar();
             } while (this.isNumOrChar(this.caractere));
 
-            Token tokeN = this.palavraReservada();
+            var token = this.palavraReservada();
 
-            if (tokeN != null) {
-                return tokeN;
-            }
-            return new Token(TypeToken.IDENTIFICADOR, this.lexema, this.line, this.column);
-        } else
+            return Objects.requireNonNullElseGet(token, () -> new Token(TypeToken.IDENTIFICADOR, this.lexema, this.line, this.column));
+        }
 
         if (this.isNum(this.caractere) || this.caractere == '.') {
 
             while (this.isNum(this.caractere)) {
-                incrementLexemaAndGetNextChar();
+                acumularLexemaEPegarProximoChar();
             }
+
             if (this.caractere == '.') {
-                incrementLexemaAndGetNextChar();
+                acumularLexemaEPegarProximoChar();
                 if (!this.isNum(this.caractere)) {
-                    String descricao = "\nCARACTERE INVALIDO, AQUI DEVERIA TER UM NUMERO\n\n";
+                    var descricao = "\nCARACTERE INVALIDO, AQUI DEVERIA TER UM NUMERO\n\n";
                     throw new ErrorScannerException(getPointer(), this.caractere, descricao);
                 }
                 while (this.isNum(this.caractere)) {
-                    incrementLexemaAndGetNextChar();
+                    acumularLexemaEPegarProximoChar();
                 }
-                if (this.caractere == '.' || this.isChar(this.caractere)) {
-                    String descricao = "\nCARACTERE INVALIDO, AQUI DEVERIA TER UM NUMERO\n\n";
-                    throw new ErrorScannerException(getPointer(), this.caractere, descricao);
+                if (this.caractere != '.' && !this.isChar(this.caractere)) {
+                    return new Token(TypeToken.DECIMAL, this.lexema, this.line, this.column);
                 }
-                return new Token(TypeToken.DECIMAL, this.lexema, this.line, this.column);
+                var descricao = "\nCARACTERE INVALIDO, AQUI DEVERIA TER UM NUMERO\n\n";
+                throw new ErrorScannerException(getPointer(), this.caractere, descricao);
             }
             return new Token(TypeToken.INTEIRO, this.lexema, this.line, this.column);
-        } else
-
+        } else {
             switch (this.caractere) {
-            case '/':
-                return this.isComment() ? new Token(TypeToken.COMENTARIO, this.line, this.column)
-                        : new Token(TypeToken.DIVISAO, this.line, this.column);
-            case '!':
-                incrementLexemaAndGetNextChar();
-                if (this.caractere == '=') {
-                    incrementLexemaAndGetNextChar();
-                    return new Token(TypeToken.DIFERENCA, this.line, this.column);
-                } else {
-                    String descricao = "\nDEVE-SE USAR !=, PARA VERIFICAR UMA DIFERENCA\n\n";
-                    throw new ErrorScannerException(getPointer(), caractere, descricao);
-                }
-            case '=':
-                incrementLexemaAndGetNextChar();
-                if (this.caractere == '=') {
-                    incrementLexemaAndGetNextChar();
-
-                    return new Token(TypeToken.IGUALDADE, this.line, this.column);
-                } else {
-                    return new Token(TypeToken.ATRIBUICAO, this.line, this.column);
-                }
-            case '-':
-                incrementLexemaAndGetNextChar();
-                return new Token(TypeToken.SUBTRACAO, this.line, this.column);
-            case '+':
-                incrementLexemaAndGetNextChar();
-                return new Token(TypeToken.SOMA, this.line, this.column);
-            case '*':
-                incrementLexemaAndGetNextChar();
-                return new Token(TypeToken.MULTIPLICAO, this.line, this.column);
-            case '<':
-                incrementLexemaAndGetNextChar();
-                if (this.caractere == '=') {
-                    incrementLexemaAndGetNextChar();
-                    return new Token(TypeToken.MENOR_IGUAL, this.line, this.column);
-                } else {
-                    return new Token(TypeToken.MENOR_QUE, this.line, this.column);
-                }
-            case '>':
-                incrementLexemaAndGetNextChar();
-                if (this.caractere == '=') {
-                    incrementLexemaAndGetNextChar();
-                    return new Token(TypeToken.MAIOR_IGUAL, this.line, this.column);
-                } else {
-                    return new Token(TypeToken.MAIOR_QUE, this.line, this.column);
-                }
-            case ';':
-                this.getNextChar();
-                return new Token(TypeToken.PONTO_VIRGULA, this.line, this.column);
-            case ',':
-                this.getNextChar();
-                return new Token(TypeToken.VIRGULA, this.line, this.column);
-            case ')':
-                this.getNextChar();
-                return new Token(TypeToken.FECHA_PARENTESES, this.line, this.column);
-            case '(':
-                this.getNextChar();
-                return new Token(TypeToken.ABRE_PARENTESES, this.line, this.column);
-            case '}':
-                this.getNextChar();
-                return new Token(TypeToken.FECHA_BLOCO, this.line, this.column);
-            case '{':
-                this.getNextChar();
-                return new Token(TypeToken.ABRE_BLOCO, this.line, this.column);
-            case ']':
-                this.getNextChar();
-                return new Token(TypeToken.FECHA_COLCHETE, this.line, this.column);
-            case '[':
-                this.getNextChar();
-                return new Token(TypeToken.ABRE_COLCHETE, this.line, this.column);
-            case '\'':
-                this.getNextChar();
-                if (this.isNumOrChar(this.caractere)) {
-                    incrementLexemaAndGetNextChar();
-
-                    if (this.caractere == '\'') {
-                        this.getNextChar();
-                        return new Token(TypeToken.CARACTER, "'" + this.lexema + "'", this.line, this.column);
+                case '/':
+                    return this.isComment() ? new Token(TypeToken.COMENTARIO, this.line, this.column)
+                            : new Token(TypeToken.DIVISAO, this.line, this.column);
+                case '!':
+                    acumularLexemaEPegarProximoChar();
+                    if (this.caractere == '=') {
+                        acumularLexemaEPegarProximoChar();
+                        return new Token(TypeToken.DIFERENCA, this.line, this.column);
                     } else {
-                        // this.erro.Errorlog(6, getPointer(), this.caractere);
-                        String descricao = "\nUM CHAR PARA SER FORMADO, PRECISA ESTAR ENTRE ASPAS SIMPLES\n\n";
+                        var descricao = "\nDEVE-SE USAR !=, PARA VERIFICAR UMA DIFERENCA\n\n";
+                        throw new ErrorScannerException(getPointer(), caractere, descricao);
+                    }
+                case '=':
+                    acumularLexemaEPegarProximoChar();
+                    if (this.caractere == '=') {
+                        acumularLexemaEPegarProximoChar();
+
+                        return new Token(TypeToken.IGUALDADE, this.line, this.column);
+                    } else {
+                        return new Token(TypeToken.ATRIBUICAO, this.line, this.column);
+                    }
+                case '-':
+                    acumularLexemaEPegarProximoChar();
+                    return new Token(TypeToken.SUBTRACAO, this.line, this.column);
+                case '+':
+                    acumularLexemaEPegarProximoChar();
+                    return new Token(TypeToken.SOMA, this.line, this.column);
+                case '*':
+                    acumularLexemaEPegarProximoChar();
+                    return new Token(TypeToken.MULTIPLICAO, this.line, this.column);
+                case '<':
+                    acumularLexemaEPegarProximoChar();
+                    if (this.caractere == '=') {
+                        acumularLexemaEPegarProximoChar();
+                        return new Token(TypeToken.MENOR_IGUAL, this.line, this.column);
+                    } else {
+                        return new Token(TypeToken.MENOR_QUE, this.line, this.column);
+                    }
+                case '>':
+                    acumularLexemaEPegarProximoChar();
+                    if (this.caractere == '=') {
+                        acumularLexemaEPegarProximoChar();
+                        return new Token(TypeToken.MAIOR_IGUAL, this.line, this.column);
+                    } else {
+                        return new Token(TypeToken.MAIOR_QUE, this.line, this.column);
+                    }
+                case ';':
+                    this.getNextChar();
+                    return new Token(TypeToken.PONTO_VIRGULA, this.line, this.column);
+                case ',':
+                    this.getNextChar();
+                    return new Token(TypeToken.VIRGULA, this.line, this.column);
+                case ')':
+                    this.getNextChar();
+                    return new Token(TypeToken.FECHA_PARENTESES, this.line, this.column);
+                case '(':
+                    this.getNextChar();
+                    return new Token(TypeToken.ABRE_PARENTESES, this.line, this.column);
+                case '}':
+                    this.getNextChar();
+                    return new Token(TypeToken.FECHA_BLOCO, this.line, this.column);
+                case '{':
+                    this.getNextChar();
+                    return new Token(TypeToken.ABRE_BLOCO, this.line, this.column);
+                case ']':
+                    this.getNextChar();
+                    return new Token(TypeToken.FECHA_COLCHETE, this.line, this.column);
+                case '[':
+                    this.getNextChar();
+                    return new Token(TypeToken.ABRE_COLCHETE, this.line, this.column);
+                case '\'':
+                    this.getNextChar();
+                    if (this.isNumOrChar(this.caractere)) {
+                        acumularLexemaEPegarProximoChar();
+
+                        if (this.caractere == '\'') {
+                            this.getNextChar();
+                            return new Token(TypeToken.CARACTER, "'" + this.lexema + "'", this.line, this.column);
+                        }
+                        var descricao = "\nUM CHAR PARA SER FORMADO, PRECISA ESTAR ENTRE ASPAS SIMPLES\n\n";
+                        throw new ErrorScannerException(getPointer(), this.caractere, descricao);
+                    } else {
+                        var descricao = "\nCARACTERES ESPECIAIS SÃO INVALIDOS, (APENAS LETRAS E NUMEROS PODEM SER UM CHAR)\n\n";
                         throw new ErrorScannerException(getPointer(), this.caractere, descricao);
                     }
-                } else {
-                    // this.erro.Errorlog(5, getPointer(), this.caractere);
-                    String descricao = "\nCARACTERES ESPECIAIS SÃO INVALIDOS, (APENAS LETRAS E NUMEROS PODEM SER UM CHAR)\n\n";
-                    throw new ErrorScannerException(getPointer(), this.caractere, descricao);
-                }
             }
+        }
         return new Token(TypeToken.ENDFILE, this.line, this.column);
     }
 
-    private void incrementLexemaAndGetNextChar() {
-        this.incrementLexema();
-        this.getNextChar();
+    private void pularEspacosEmBranco() {
+        while (Character.isWhitespace(this.caractere)) {
+            this.getNextChar();
+        }
     }
 
-    public boolean endFile() {
-        return (this.ascii == -1);
+    private void acumularLexemaEPegarProximoChar() {
+        this.acumularLexema();
+        this.getNextChar();
     }
 
     private boolean isChar(char c) {
@@ -266,26 +257,26 @@ public class Scanner {
 
     private Token palavraReservada() {
         switch (this.lexema) {
-        case "float":
-            return new Token(TypeToken.PR_FLOAT, this.line, this.column);
-        case "int":
-            return new Token(TypeToken.PR_INT, this.line, this.column);
-        case "main":
-            return new Token(TypeToken.PR_MAIN, this.line, this.column);
-        case "char":
-            return new Token(TypeToken.PR_CHAR, this.line, this.column);
-        case "if":
-            return new Token(TypeToken.PR_IF, this.line, this.column);
-        case "else":
-            return new Token(TypeToken.PR_ELSE, this.line, this.column);
-        case "while":
-            return new Token(TypeToken.PR_WHILE, this.line, this.column);
-        case "do":
-            return new Token(TypeToken.PR_DO, this.line, this.column);
-        case "for":
-            return new Token(TypeToken.PR_FOR, this.line, this.column);
-        default:
-            return null;
+            case "float":
+                return new Token(TypeToken.PR_FLOAT, this.line, this.column);
+            case "int":
+                return new Token(TypeToken.PR_INT, this.line, this.column);
+            case "main":
+                return new Token(TypeToken.PR_MAIN, this.line, this.column);
+            case "char":
+                return new Token(TypeToken.PR_CHAR, this.line, this.column);
+            case "if":
+                return new Token(TypeToken.PR_IF, this.line, this.column);
+            case "else":
+                return new Token(TypeToken.PR_ELSE, this.line, this.column);
+            case "while":
+                return new Token(TypeToken.PR_WHILE, this.line, this.column);
+            case "do":
+                return new Token(TypeToken.PR_DO, this.line, this.column);
+            case "for":
+                return new Token(TypeToken.PR_FOR, this.line, this.column);
+            default:
+                return null;
         }
     }
 

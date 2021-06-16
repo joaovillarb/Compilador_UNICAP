@@ -1,7 +1,5 @@
 package projeto_compilador;
 
-import projeto_compilador.parser.Variavel;
-
 public class Token {
 
     private String lexema;
@@ -16,6 +14,20 @@ public class Token {
 
     public void setCodIter(String codIter) {
         this.codIter = codIter;
+    }
+
+    public Token(TypeToken type, int line, int column) {
+        this.type = type;
+        this.lexema = type.getNome();
+        this.line = line;
+        this.column = column;
+    }
+
+    public Token(TypeToken type, String lexema, int line, int column) {
+        this.type = type;
+        this.lexema = lexema;
+        this.line = line;
+        this.column = column;
     }
 
     public TypeToken getType() {
@@ -34,24 +46,10 @@ public class Token {
         return this.line;
     }
 
-    public Token(TypeToken type, int line, int column) {
-        this.type = type;
-        this.lexema = type.getNome();
-        this.line = line;
-        this.column = column;
-    }
-
-    public Token(TypeToken type, String lexema, int line, int column) {
-        this.type = type;
-        this.lexema = lexema;
-        this.line = line;
-        this.column = column;
-    }
-
     public TypeToken getTypePalavraReservada(Token token) {
         if (token.getType() == TypeToken.PR_FLOAT) {
             return TypeToken.DECIMAL;
-        }else if (token.getType() == TypeToken.PR_INT) {
+        } else if (token.getType() == TypeToken.PR_INT) {
             return TypeToken.INTEIRO;
         } else if (token.getType() == TypeToken.PR_CHAR) {
             return TypeToken.CARACTER;
