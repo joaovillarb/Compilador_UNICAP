@@ -311,8 +311,8 @@ public class Parser {
                     int abre = 0;
                     int fecha = 0;
                     Token op;
-
-                    for (int i = 0; i < atrib.getOperador().size(); i++) {
+                    int i = 0;
+                    while (atrib.getOperador().stream().anyMatch(f->f.getType() == TypeToken.ABRE_PARENTESES)) {
                         if (atrib.getOperador().get(i).getType() == TypeToken.ABRE_PARENTESES) {
                             abre = i;
                         }
@@ -320,18 +320,21 @@ public class Parser {
                             fecha = i;
 
                             var vetToken = new ArrayList<Token>();
-                            for (int j = abre; j < fecha; j++) {
+                            for (int j = abre+1; j < fecha; j++) {
                                 vetToken.add(atrib.getOperador().get(j));
                             }
-                            ladoEsquerdo = geradorDeCodigo(ladoEsquerdo);
-                            for (int j = abre; j < fecha; j++) {
-                                vetToken.remove(atrib.getOperador().get(j));
+                            ladoEsquerdo = geradorDeCodigo(ladoEsquerdo,vetToken);
+                            for (int j = fecha; j > abre; j--) {
+                                atrib.getOperador().remove(j);
+
                             }
-                            atrib.getOperador().remove(fecha);
+                            i=-1;
                             atrib.getOperador().set(abre, ladoEsquerdo);
                         }
+                        i++;
                     }
-                    ladoEsquerdo = geradorDeCodigo(ladoEsquerdo);
+                    ArrayList<Token> novo = new ArrayList<>(atrib.getOperador());
+                    ladoEsquerdo = geradorDeCodigo(ladoEsquerdo,novo);
                     atrib.getOperador().clear();
                 }
 
@@ -346,9 +349,8 @@ public class Parser {
         }
     }
 
-    private Token geradorDeCodigo(Token ladoEsquerdo) {
+    private Token geradorDeCodigo(Token ladoEsquerdo, ArrayList<Token> novo) {
         int k = 0;
-        ArrayList<Token> novo = new ArrayList<>(atrib.getOperador());
         while (novo.stream().anyMatch(this::isExpressaoTermo)) {
             Token k1 = getK(ladoEsquerdo, novo, k, isExpressaoTermo(novo.get(k)));
             if (k1 != null) {
@@ -424,12 +426,18 @@ public class Parser {
         this.getNextToken();
 
         if (token.getType() == TypeToken.PONTO_VIRGULA) return;
-
-        while(this.token.getType() == TypeToken.ABRE_PARENTESES || this.token.getType() == TypeToken.FECHA_PARENTESES){
-            T();
+        if (token.getType() == TypeToken.FECHA_PARENTESES){
+            return;
         }
         Token operador = identificarOperador();
+        atrib.adicionar(operador);
         T();
+        if(token.getType() == TypeToken.ABRE_PARENTESES){
+            atrib.adicionar(this.token);
+            this.getNextToken();
+            atrib.adicionar(this.token);
+            atribuicaoLogica(ultimoPaiDoTipo);
+        }
 
         if (operador.getType() == TypeToken.DIVISAO
                 && this.token.getType() == TypeToken.INTEIRO
@@ -441,7 +449,6 @@ public class Parser {
 
         verificarVariavel(ultimoPaiDoTipo);
         var ultimaVariavelAdicionada = getLastSimbolo();
-        atrib.adicionar(operador);
         atrib.adicionar(this.token);
 
         atribuicaoLogica(ultimoPaiDoTipo);
@@ -469,6 +476,17 @@ public class Parser {
     }
 
     public void T() {
+        this.getNextToken();
+        if (!this.isPrimeiroFator()) {
+            var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
+            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+        }
+        var variavel = new Variavel(this.token, token.getType(), this.escopo);
+        this.simbolo.adicionar(variavel);
+    }
+
+
+    public void T2() {
         this.getNextToken();
         if (!this.isPrimeiroFator()) {
             var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";

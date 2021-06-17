@@ -1,9 +1,9 @@
 int main() {
-    int x;
+    float x;
     float y;
     float w;
 
-    x = (2 + 3);
+    x = 2 * (5+(4/2));
 }
 
 
