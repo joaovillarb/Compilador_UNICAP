@@ -287,8 +287,9 @@ public class Parser {
 
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
+
             T();
-            Variavel pai = calcularPai(ladoEsquerdo);
+            Variavel pai = descobrirPai(ladoEsquerdo);
             verificarVariavel(pai);
 
             var ultimaVariavelAdicionada = getLastSimbolo();
@@ -416,7 +417,7 @@ public class Parser {
     }
 
     //    metodo para descobrir quem declarou essa variavel (quem eh o pai)
-    private Variavel calcularPai(Token ladoEsquerdo) {
+    private Variavel descobrirPai(Token ladoEsquerdo) {
         Stream<Variavel> variavelStream = variaveisDeclaradas.stream().filter(f -> f.getToken().getLexema().equals(ladoEsquerdo.getLexema()));
         return variavelStream.reduce((first, second) -> second).orElse(null);
     }
@@ -451,7 +452,7 @@ public class Parser {
     private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
         var ultimaVariavelAdicionada = getLastSimbolo();
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
-            ultimaVariavelAdicionada = calcularPai(ultimaVariavelAdicionada.getToken());
+            ultimaVariavelAdicionada = descobrirPai(ultimaVariavelAdicionada.getToken());
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.ABRE_PARENTESES || ultimaVariavelAdicionada.getTipo() == TypeToken.FECHA_PARENTESES)
             return true;
         return (ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo()) || ((ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO) && (ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL));
