@@ -288,59 +288,64 @@ public class Parser {
         this.getNextToken();
         if (token.getType() == TypeToken.ATRIBUICAO) {
             T();
-            Variavel calcularPai = calcularPai(ladoEsquerdo);
-            verificarVariavel(calcularPai);
+            Variavel pai = calcularPai(ladoEsquerdo);
+            verificarVariavel(pai);
 
             var ultimaVariavelAdicionada = getLastSimbolo();
             listaOperador.add(this.token);
-            atribuicaoLogica(calcularPai);
+            atribuicaoLogica(pai);
 
-            if (listaOperador.size() == 1) {
-                if (calcularPai.getTipo() == TypeToken.DECIMAL) {
-                    System.out.println(this.newTemp() + " = (float)" + ultimaVariavelAdicionada.getToken().getLexema());
-                    ladoEsquerdo.setCodIter("T" + contador);
-                    System.out.println(calcularPai.getToken().getLexema() + " = " + ladoEsquerdo.getCodIter());
-                } else {
-                    System.out.println(calcularPai.getToken().getLexema() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
-                }
-            } else {
-                while (!listaOperador.isEmpty()) {
-                    int abre = 0;
-                    int fecha = 0;
-                    Token op;
-                    int i = 0;
-                    while (listaOperador.stream().anyMatch(f -> f.getType() == TypeToken.ABRE_PARENTESES)) {
-                        if (listaOperador.get(i).getType() == TypeToken.ABRE_PARENTESES) {
-                            abre = i;
-                        }
-                        if (listaOperador.get(i).getType() == TypeToken.FECHA_PARENTESES) {
-                            fecha = i;
+            gerarCodigoIntermediarioAtribuicao(ladoEsquerdo, pai, ultimaVariavelAdicionada);
 
-                            var vetToken = new ArrayList<Token>();
-                            for (int j = abre + 1; j < fecha; j++) {
-                                vetToken.add(listaOperador.get(j));
-                            }
-                            ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, vetToken);
-                            for (int j = fecha; j > abre; j--) {
-                                listaOperador.remove(j);
-                            }
-                            i = -1;
-                            listaOperador.set(abre, ladoEsquerdo);
-                        }
-                        i++;
-                    }
-                    ArrayList<Token> novo = new ArrayList<>(listaOperador);
-                    ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, novo);
-                    listaOperador.clear();
-                }
-
-                System.out.println(ladoEsquerdo.getLexema() + " = " + ladoEsquerdo.getCodIter());
-                ladoEsquerdo.setCodIter("T" + contador);
-            }
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 throw new ErrorParserException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
             }
             this.getNextToken();
+        }
+    }
+
+    private void gerarCodigoIntermediarioAtribuicao(Token ladoEsquerdo, Variavel calcularPai, Variavel ultimaVariavelAdicionada) {
+        if (listaOperador.size() == 1) {
+            if (calcularPai.getTipo() == TypeToken.DECIMAL) {
+                System.out.println(this.newTemp() + " = (float)" + ultimaVariavelAdicionada.getToken().getLexema());
+                ladoEsquerdo.setCodIter("T" + contador);
+                System.out.println(calcularPai.getToken().getLexema() + " = " + ladoEsquerdo.getCodIter());
+            } else {
+                System.out.println(calcularPai.getToken().getLexema() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
+            }
+        } else {
+            while (!listaOperador.isEmpty()) {
+                int abre = 0;
+                int fecha = 0;
+                Token op;
+                int i = 0;
+                while (listaOperador.stream().anyMatch(f -> f.getType() == TypeToken.ABRE_PARENTESES)) {
+                    if (listaOperador.get(i).getType() == TypeToken.ABRE_PARENTESES) {
+                        abre = i;
+                    }
+                    if (listaOperador.get(i).getType() == TypeToken.FECHA_PARENTESES) {
+                        fecha = i;
+
+                        var vetToken = new ArrayList<Token>();
+                        for (int j = abre + 1; j < fecha; j++) {
+                            vetToken.add(listaOperador.get(j));
+                        }
+                        ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, vetToken);
+                        for (int j = fecha; j > abre; j--) {
+                            listaOperador.remove(j);
+                        }
+                        i = -1;
+                        listaOperador.set(abre, ladoEsquerdo);
+                    }
+                    i++;
+                }
+                ArrayList<Token> novo = new ArrayList<>(listaOperador);
+                ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, novo);
+                listaOperador.clear();
+            }
+
+            System.out.println(ladoEsquerdo.getLexema() + " = " + ladoEsquerdo.getCodIter());
+            ladoEsquerdo.setCodIter("T" + contador);
         }
     }
 
