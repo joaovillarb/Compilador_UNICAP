@@ -1,8 +1,9 @@
 int main() {
     int x;
-    int y;
+    float y;
+    float w;
 
-    x=10*2+2+3;
-    y=2;
-
+    x = (2 + 3);
 }
+
+

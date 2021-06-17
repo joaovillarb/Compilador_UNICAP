@@ -9,7 +9,7 @@ import java.util.List;
 public class Atribuicoes {
 
     List<Variavel> atribuicao = new ArrayList<>();
-    List<Token> operador = new ArrayList<>();
+    LinkedList<Token> operador = new LinkedList<>();
 
     public List<Variavel> getAtribuicao() {
         return atribuicao;

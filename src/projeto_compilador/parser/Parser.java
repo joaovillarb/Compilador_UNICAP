@@ -299,35 +299,102 @@ public class Parser {
             atribuicaoLogica(calcularPai);
 
             if (atrib.getOperador().size() == 1) {
-                if (ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO || ultimaVariavelAdicionada.getTipo() == TypeToken.DECIMAL) {
-                    ladoEsquerdo.setCodIter("T" + contador);
+                if (calcularPai.getTipo() == TypeToken.DECIMAL) {
                     System.out.println(this.newTemp() + " = (float)" + ultimaVariavelAdicionada.getToken().getLexema());
+                    ladoEsquerdo.setCodIter("T" + contador);
+                    System.out.println(calcularPai.getToken().getLexema() + " = " + ladoEsquerdo.getCodIter());
                 } else {
-                    System.out.println(this.newTemp() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
+                    System.out.println(calcularPai.getToken().getLexema() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
                 }
             } else {
-                String loop = null;
-                Token op = null;
+                while (!atrib.getOperador().isEmpty()) {
+                    int abre = 0;
+                    int fecha = 0;
+                    Token op;
 
-                for (Token t : atrib.getOperador()) {
-                    if (loop == null) {
-                        loop = t.getLexema();
-                    } else if (isOperadorRelacional(t) || this.isExpressaoArit(t) || this.isExpressaoTermo(t)) {
-                        op = t;
-                    } else {
-                        System.out.println(this.newTemp() + " = " + loop + " "+ op.getLexema() +" "+t.getLexema());
-                        ladoEsquerdo.setCodIter("T" + contador);
-                        loop = ladoEsquerdo.getCodIter();
+                    for (int i = 0; i < atrib.getOperador().size(); i++) {
+                        if (atrib.getOperador().get(i).getType() == TypeToken.ABRE_PARENTESES) {
+                            abre = i;
+                        }
+                        if (atrib.getOperador().get(i).getType() == TypeToken.FECHA_PARENTESES) {
+                            fecha = i;
+
+                            var vetToken = new ArrayList<Token>();
+                            for (int j = abre; j < fecha; j++) {
+                                vetToken.add(atrib.getOperador().get(j));
+                            }
+                            ladoEsquerdo = geradorDeCodigo(ladoEsquerdo);
+                            for (int j = abre; j < fecha; j++) {
+                                vetToken.remove(atrib.getOperador().get(j));
+                            }
+                            atrib.getOperador().remove(fecha);
+                            atrib.getOperador().set(abre, ladoEsquerdo);
+                        }
                     }
+                    ladoEsquerdo = geradorDeCodigo(ladoEsquerdo);
+                    atrib.getOperador().clear();
                 }
+
+                System.out.println(ladoEsquerdo.getLexema() + " = " + ladoEsquerdo.getCodIter());
+                ladoEsquerdo.setCodIter("T" + contador);
+
             }
-//            System.out.println(atrib.getOperador());
-            atrib.getOperador().clear();
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
             }
             this.getNextToken();
         }
+    }
+
+    private Token geradorDeCodigo(Token ladoEsquerdo) {
+        int k = 0;
+        ArrayList<Token> novo = new ArrayList<>(atrib.getOperador());
+        while (novo.stream().anyMatch(this::isExpressaoTermo)) {
+            Token k1 = getK(ladoEsquerdo, novo, k, isExpressaoTermo(novo.get(k)));
+            if (k1 != null) {
+                ladoEsquerdo = k1;
+                k--;
+            } else {
+                k++;
+            }
+        }
+
+        k = 0;
+        while (novo.stream().anyMatch(this::isExpressaoArit)) {
+            Token k1 = getK(ladoEsquerdo, novo, k, isExpressaoArit(novo.get(k)));
+            if (k1 != null) {
+                ladoEsquerdo = k1;
+                k--;
+            } else {
+                k++;
+            }
+        }
+        return ladoEsquerdo;
+    }
+
+    private Token getK(Token ladoEsquerdo, ArrayList<Token> vetToken, int k, boolean expressaoArit) {
+
+        if (expressaoArit) {
+            var antes = vetToken.get(k - 1);
+            var depois = vetToken.get(k + 1);
+
+            if (antes == ladoEsquerdo)
+                System.out.println(this.newTemp() + " = " + antes.getCodIter() + " " + vetToken.get(k).getLexema() + " " + depois.getLexema());
+            else if (depois == ladoEsquerdo)
+                System.out.println(this.newTemp() + " = " + antes.getLexema() + " " + vetToken.get(k).getLexema() + " " + depois.getCodIter());
+            else
+                System.out.println(this.newTemp() + " = " + antes.getLexema() + " " + vetToken.get(k).getLexema() + " " + depois.getLexema());
+
+            ladoEsquerdo.setCodIter("T" + contador);
+
+            vetToken.set(k, ladoEsquerdo);
+            vetToken.remove(k + 1);
+            vetToken.remove(k - 1);
+            return ladoEsquerdo;
+        } else {
+            return null;
+        }
+
     }
 
     private void verificarVariavel(Variavel calcularPai) {
@@ -358,6 +425,9 @@ public class Parser {
 
         if (token.getType() == TypeToken.PONTO_VIRGULA) return;
 
+        while(this.token.getType() == TypeToken.ABRE_PARENTESES || this.token.getType() == TypeToken.FECHA_PARENTESES){
+            T();
+        }
         Token operador = identificarOperador();
         T();
 
@@ -382,6 +452,8 @@ public class Parser {
         var ultimaVariavelAdicionada = getLastSimbolo();
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
             ultimaVariavelAdicionada = calcularPai(ultimaVariavelAdicionada.getToken());
+        if (ultimaVariavelAdicionada.getTipo() == TypeToken.ABRE_PARENTESES || ultimaVariavelAdicionada.getTipo() == TypeToken.FECHA_PARENTESES)
+            return true;
         return (ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo()) || ((ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO) && (ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL));
     }
 
