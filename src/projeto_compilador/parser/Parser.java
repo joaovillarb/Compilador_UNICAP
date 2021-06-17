@@ -292,7 +292,7 @@ public class Parser {
             Variavel pai = descobrirPai(ladoEsquerdo);
             verificarVariavel(pai);
 
-            var ultimaVariavelAdicionada = getLastSimbolo();
+            var ultimaVariavelAdicionada = ultimoSimboloAdicionado();
             listaOperador.add(this.token);
             atribuicaoLogica(pai);
 
@@ -316,10 +316,9 @@ public class Parser {
             }
         } else {
             while (!listaOperador.isEmpty()) {
-                int abre = 0;
-                int fecha = 0;
-                Token op;
-                int i = 0;
+                var abre = 0;
+                var fecha = 0;
+                var i = 0;
                 while (listaOperador.stream().anyMatch(f -> f.getType() == TypeToken.ABRE_PARENTESES)) {
                     if (listaOperador.get(i).getType() == TypeToken.ABRE_PARENTESES) {
                         abre = i;
@@ -332,8 +331,8 @@ public class Parser {
                             vetToken.add(listaOperador.get(j));
                         }
                         ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, vetToken);
-                        for (int j = fecha; j > abre; j--) {
-                            listaOperador.remove(j);
+                        if (fecha >= abre + 1) {
+                            listaOperador.subList(abre + 1, fecha + 1).clear();
                         }
                         i = -1;
                         listaOperador.set(abre, ladoEsquerdo);
@@ -412,7 +411,7 @@ public class Parser {
         }
     }
 
-    private Variavel getLastSimbolo() {
+    private Variavel ultimoSimboloAdicionado() {
         return this.simbolo.getVariaveis().get(this.simbolo.getVariaveis().size() - 1);
     }
 
@@ -450,12 +449,14 @@ public class Parser {
     }
 
     private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
-        var ultimaVariavelAdicionada = getLastSimbolo();
+        var ultimaVariavelAdicionada = ultimoSimboloAdicionado();
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.IDENTIFICADOR)
             ultimaVariavelAdicionada = descobrirPai(ultimaVariavelAdicionada.getToken());
         if (ultimaVariavelAdicionada.getTipo() == TypeToken.ABRE_PARENTESES || ultimaVariavelAdicionada.getTipo() == TypeToken.FECHA_PARENTESES)
             return true;
-        return (ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo()) || ((ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO) && (ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL));
+        return (ultimaVariavelAdicionada.getTipo() == ultimoPaiDoTipo.getTipo()) ||
+                ((ultimaVariavelAdicionada.getTipo() == TypeToken.INTEIRO) &&
+                        (ultimoPaiDoTipo.getTipo() == TypeToken.DECIMAL));
     }
 
     private void El() {
@@ -470,17 +471,6 @@ public class Parser {
     }
 
     public void T() {
-        this.getNextToken();
-        if (!this.isPrimeiroFator()) {
-            var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
-            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
-        }
-        var variavel = new Variavel(this.token, token.getType(), this.escopo);
-        this.simbolo.adicionar(variavel);
-    }
-
-
-    public void T2() {
         this.getNextToken();
         if (!this.isPrimeiroFator()) {
             var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
