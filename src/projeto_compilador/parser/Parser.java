@@ -312,7 +312,7 @@ public class Parser {
                     int fecha = 0;
                     Token op;
                     int i = 0;
-                    while (atrib.getOperador().stream().anyMatch(f->f.getType() == TypeToken.ABRE_PARENTESES)) {
+                    while (atrib.getOperador().stream().anyMatch(f -> f.getType() == TypeToken.ABRE_PARENTESES)) {
                         if (atrib.getOperador().get(i).getType() == TypeToken.ABRE_PARENTESES) {
                             abre = i;
                         }
@@ -320,27 +320,26 @@ public class Parser {
                             fecha = i;
 
                             var vetToken = new ArrayList<Token>();
-                            for (int j = abre+1; j < fecha; j++) {
+                            for (int j = abre + 1; j < fecha; j++) {
                                 vetToken.add(atrib.getOperador().get(j));
                             }
-                            ladoEsquerdo = geradorDeCodigo(ladoEsquerdo,vetToken);
+                            ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, vetToken);
                             for (int j = fecha; j > abre; j--) {
                                 atrib.getOperador().remove(j);
 
                             }
-                            i=-1;
+                            i = -1;
                             atrib.getOperador().set(abre, ladoEsquerdo);
                         }
                         i++;
                     }
                     ArrayList<Token> novo = new ArrayList<>(atrib.getOperador());
-                    ladoEsquerdo = geradorDeCodigo(ladoEsquerdo,novo);
+                    ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, novo);
                     atrib.getOperador().clear();
                 }
 
                 System.out.println(ladoEsquerdo.getLexema() + " = " + ladoEsquerdo.getCodIter());
                 ladoEsquerdo.setCodIter("T" + contador);
-
             }
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
                 throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
@@ -426,16 +425,26 @@ public class Parser {
         this.getNextToken();
 
         if (token.getType() == TypeToken.PONTO_VIRGULA) return;
-        if (token.getType() == TypeToken.FECHA_PARENTESES){
+
+        if (token.getType() == TypeToken.FECHA_PARENTESES) {
+            atrib.adicionar(this.token);
+            do {
+                this.getNextToken();
+                if (token.getType() != TypeToken.PONTO_VIRGULA) {
+                    atrib.adicionar(this.token);
+                }
+            } while (token.getType() == TypeToken.FECHA_PARENTESES);
             return;
         }
         Token operador = identificarOperador();
         atrib.adicionar(operador);
         T();
-        if(token.getType() == TypeToken.ABRE_PARENTESES){
+        if (token.getType() == TypeToken.ABRE_PARENTESES) {
             atrib.adicionar(this.token);
-            this.getNextToken();
-            atrib.adicionar(this.token);
+            do {
+                this.getNextToken();
+                atrib.adicionar(this.token);
+            } while (token.getType() == TypeToken.ABRE_PARENTESES);
             atribuicaoLogica(ultimoPaiDoTipo);
         }
 
@@ -447,12 +456,13 @@ public class Parser {
             throw new ErrorSyntaxException(ultimoPaiDoTipo.getToken().getLine(), ultimoPaiDoTipo.getToken().getColumn(), msg);
         }
 
-        verificarVariavel(ultimoPaiDoTipo);
-        var ultimaVariavelAdicionada = getLastSimbolo();
-        atrib.adicionar(this.token);
+        if (token.getType() == TypeToken.PONTO_VIRGULA) return;
 
+        if (token.getType() != TypeToken.FECHA_PARENTESES) {
+            verificarVariavel(ultimoPaiDoTipo);
+            atrib.adicionar(this.token);
+        }
         atribuicaoLogica(ultimoPaiDoTipo);
-
     }
 
     private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
