@@ -2,7 +2,7 @@ package projeto_compilador.parser;
 
 import projeto_compilador.Token;
 import projeto_compilador.TypeToken;
-import projeto_compilador.exceptions.ErrorSyntaxException;
+import projeto_compilador.exceptions.ErrorParserException;
 import projeto_compilador.scanner.Scanner;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class Parser {
         bloco();
         if (token.getType() != TypeToken.ENDFILE) {
             var msg = "Fim de arquivo esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
         this.simbolo.getVariaveis().remove(0);
         //System.out.println(simbolo.getVariaveis());
@@ -61,23 +61,23 @@ public class Parser {
         this.getNextToken();
         if (token.getType() != TypeToken.PR_INT) {
             var msg = "Palavra reservada int esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.PR_MAIN) {
             var msg = "Palavra reservada main esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
         }
 
         this.getNextToken();
@@ -86,7 +86,7 @@ public class Parser {
     private void bloco() {
         if (token.getType() != TypeToken.ABRE_BLOCO) {
             var msg = "Abre chaves esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         this.escopo++;
@@ -99,7 +99,7 @@ public class Parser {
 
         if (token.getType() != TypeToken.FECHA_BLOCO) {
             var msg = "Fecha chaves esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
         this.getNextToken();
         this.escopo--;
@@ -126,7 +126,7 @@ public class Parser {
 
         getIdentificador(auxToken);
         if (token.getType() != TypeToken.PONTO_VIRGULA) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
         }
         this.getNextToken();
     }
@@ -135,7 +135,7 @@ public class Parser {
         this.getNextToken();
         if (token.getType() != TypeToken.IDENTIFICADOR) {
             var msg = "Identificador esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         calcularDeclaracaoVariavel(auxToken);
@@ -153,7 +153,7 @@ public class Parser {
 
         if (any.isPresent()) {
             var msg = "Lexema já declarado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         variaveisDeclaradas.add(variavel);
@@ -184,7 +184,7 @@ public class Parser {
 
             this.getNextToken();
             if (token.getType() != TypeToken.ABRE_PARENTESES) {
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
+                throw new ErrorParserException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
             }
 
             T();
@@ -193,7 +193,7 @@ public class Parser {
             this.ifContador++;
 
             if (token.getType() != TypeToken.FECHA_PARENTESES) {
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
+                throw new ErrorParserException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
             }
 
             this.getNextToken();
@@ -208,7 +208,7 @@ public class Parser {
             System.out.println("label_fim_if_" + cont + ":");
         } else {
             var msg = "Deveria ter um IF aqui";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
     }
 
@@ -218,19 +218,19 @@ public class Parser {
         this.getNextToken();
         if (!this.isComando()) {
             var msg = "Deveria ter um comando aqui";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         this.comando();
 
         if (token.getType() != TypeToken.PR_WHILE) {
             var msg = "Palavra reservada while esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
         T();
         if (this.isPrimeiroFator()) {
@@ -238,14 +238,14 @@ public class Parser {
             this.doWhileContador++;
         } else {
             var msg = "Expressão relacional esperado";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
         }
         this.getNextToken();
         if (token.getType() != TypeToken.PONTO_VIRGULA) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
         }
         this.getNextToken();
         System.out.println("if T" + contador + " != 0 goto label_doWhile_inicio_" + cont);
@@ -256,7 +256,7 @@ public class Parser {
         System.out.println("label_while_inicio_" + cont + ":");
         this.getNextToken();
         if (token.getType() != TypeToken.ABRE_PARENTESES) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), ABRE_PARENTESES_ESPERADO);
         }
 
         T();
@@ -265,7 +265,7 @@ public class Parser {
         this.whileContador++;
 
         if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), FECHA_PARENTESES_ESPERADO);
         }
         this.getNextToken();
         this.comando();
@@ -338,7 +338,7 @@ public class Parser {
                 ladoEsquerdo.setCodIter("T" + contador);
             }
             if (token.getType() != TypeToken.PONTO_VIRGULA) {
-                throw new ErrorSyntaxException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
+                throw new ErrorParserException(token.getLine(), token.getColumn(), PONTO_E_VIRGULA_ESPERADO);
             }
             this.getNextToken();
         }
@@ -397,12 +397,12 @@ public class Parser {
     private void verificarVariavel(Variavel calcularPai) {
         if (calcularPai == null) {
             var msg = "Variavel não declarada";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
 
         if (!verificarTipo(calcularPai)) {
             var msg = "Tipagem incorreta";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
     }
 
@@ -439,7 +439,7 @@ public class Parser {
                 && ladoEsquerdo.getType() == TypeToken.INTEIRO
                 && ultimoPaiDoTipo.getTipo() == TypeToken.INTEIRO) {
             var msg = "Dividindo-se dois inteiros o tipo esperado é FLOAT";
-            throw new ErrorSyntaxException(ultimoPaiDoTipo.getToken().getLine(), ultimoPaiDoTipo.getToken().getColumn(), msg);
+            throw new ErrorParserException(ultimoPaiDoTipo.getToken().getLine(), ultimoPaiDoTipo.getToken().getColumn(), msg);
         }
     }
 
@@ -467,7 +467,7 @@ public class Parser {
         this.getNextToken();
         if (!this.isPrimeiroFator()) {
             var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
         var variavel = new Variavel(this.token, token.getType(), this.escopo);
         this.simbolo.adicionar(variavel);
@@ -478,7 +478,7 @@ public class Parser {
         this.getNextToken();
         if (!this.isPrimeiroFator()) {
             var msg = "Esperado um IDENTIFICADOR, INTEIRO, FLOAT ou CARACTER";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
         var variavel = new Variavel(this.token, token.getType(), this.escopo);
         this.simbolo.adicionar(variavel);
@@ -487,7 +487,7 @@ public class Parser {
     public Token identificarOperador() {
         if (!isOperadorRelacional(this.token) && !this.isExpressaoArit(this.token) && !this.isExpressaoTermo(this.token)) {
             var msg = "Esperado um OPERADOR";
-            throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
+            throw new ErrorParserException(token.getLine(), token.getColumn(), msg);
         }
         return this.token;
     }
