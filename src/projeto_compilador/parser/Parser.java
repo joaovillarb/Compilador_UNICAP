@@ -18,9 +18,7 @@ public class Parser {
 
     private final Scanner scanner;
     private final Simbolo simbolo;
-    private final Atribuicoes atrib;
     private final List<Variavel> variaveisDeclaradas;
-    private final List<Variavel> listaAtrib;
     private final List<Token> listaOperador;
     private int escopo;
     private int contador;
@@ -32,9 +30,7 @@ public class Parser {
     public Parser(Scanner scanner) {
         this.scanner = scanner;
         this.simbolo = new Simbolo();
-        this.atrib = new Atribuicoes();
         this.variaveisDeclaradas = new ArrayList<>();
-        this.listaAtrib = new ArrayList<>();
         this.listaOperador = new ArrayList<>();
         this.escopo = 0;
     }
@@ -239,6 +235,7 @@ public class Parser {
         T();
         if (this.isPrimeiroFator()) {
             El();
+            this.doWhileContador++;
         } else {
             var msg = "Expressão relacional esperado";
             throw new ErrorSyntaxException(token.getLine(), token.getColumn(), msg);
@@ -295,10 +292,10 @@ public class Parser {
             verificarVariavel(calcularPai);
 
             var ultimaVariavelAdicionada = getLastSimbolo();
-            atrib.adicionar(this.token);
+            listaOperador.add(this.token);
             atribuicaoLogica(calcularPai);
 
-            if (atrib.getOperador().size() == 1) {
+            if (listaOperador.size() == 1) {
                 if (calcularPai.getTipo() == TypeToken.DECIMAL) {
                     System.out.println(this.newTemp() + " = (float)" + ultimaVariavelAdicionada.getToken().getLexema());
                     ladoEsquerdo.setCodIter("T" + contador);
@@ -307,35 +304,34 @@ public class Parser {
                     System.out.println(calcularPai.getToken().getLexema() + " = " + ultimaVariavelAdicionada.getToken().getLexema());
                 }
             } else {
-                while (!atrib.getOperador().isEmpty()) {
+                while (!listaOperador.isEmpty()) {
                     int abre = 0;
                     int fecha = 0;
                     Token op;
                     int i = 0;
-                    while (atrib.getOperador().stream().anyMatch(f -> f.getType() == TypeToken.ABRE_PARENTESES)) {
-                        if (atrib.getOperador().get(i).getType() == TypeToken.ABRE_PARENTESES) {
+                    while (listaOperador.stream().anyMatch(f -> f.getType() == TypeToken.ABRE_PARENTESES)) {
+                        if (listaOperador.get(i).getType() == TypeToken.ABRE_PARENTESES) {
                             abre = i;
                         }
-                        if (atrib.getOperador().get(i).getType() == TypeToken.FECHA_PARENTESES) {
+                        if (listaOperador.get(i).getType() == TypeToken.FECHA_PARENTESES) {
                             fecha = i;
 
                             var vetToken = new ArrayList<Token>();
                             for (int j = abre + 1; j < fecha; j++) {
-                                vetToken.add(atrib.getOperador().get(j));
+                                vetToken.add(listaOperador.get(j));
                             }
                             ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, vetToken);
                             for (int j = fecha; j > abre; j--) {
-                                atrib.getOperador().remove(j);
-
+                                listaOperador.remove(j);
                             }
                             i = -1;
-                            atrib.getOperador().set(abre, ladoEsquerdo);
+                            listaOperador.set(abre, ladoEsquerdo);
                         }
                         i++;
                     }
-                    ArrayList<Token> novo = new ArrayList<>(atrib.getOperador());
+                    ArrayList<Token> novo = new ArrayList<>(listaOperador);
                     ladoEsquerdo = geradorDeCodigo(ladoEsquerdo, novo);
-                    atrib.getOperador().clear();
+                    listaOperador.clear();
                 }
 
                 System.out.println(ladoEsquerdo.getLexema() + " = " + ladoEsquerdo.getCodIter());
@@ -426,28 +422,18 @@ public class Parser {
 
         if (token.getType() == TypeToken.PONTO_VIRGULA) return;
 
-        if (token.getType() == TypeToken.FECHA_PARENTESES) {
-            atrib.adicionar(this.token);
-            do {
-                this.getNextToken();
-                if (token.getType() != TypeToken.PONTO_VIRGULA) {
-                    atrib.adicionar(this.token);
-                }
-            } while (token.getType() == TypeToken.FECHA_PARENTESES);
-            return;
-        }
         Token operador = identificarOperador();
-        atrib.adicionar(operador);
+        listaOperador.add(operador);
         T();
-        if (token.getType() == TypeToken.ABRE_PARENTESES) {
-            atrib.adicionar(this.token);
-            do {
-                this.getNextToken();
-                atrib.adicionar(this.token);
-            } while (token.getType() == TypeToken.ABRE_PARENTESES);
-            atribuicaoLogica(ultimoPaiDoTipo);
-        }
 
+        verificarTipoDivisao(ultimoPaiDoTipo, ladoEsquerdo, operador);
+
+        verificarVariavel(ultimoPaiDoTipo);
+        listaOperador.add(this.token);
+        atribuicaoLogica(ultimoPaiDoTipo);
+    }
+
+    private void verificarTipoDivisao(Variavel ultimoPaiDoTipo, Token ladoEsquerdo, Token operador) {
         if (operador.getType() == TypeToken.DIVISAO
                 && this.token.getType() == TypeToken.INTEIRO
                 && ladoEsquerdo.getType() == TypeToken.INTEIRO
@@ -455,14 +441,6 @@ public class Parser {
             var msg = "Dividindo-se dois inteiros o tipo esperado é FLOAT";
             throw new ErrorSyntaxException(ultimoPaiDoTipo.getToken().getLine(), ultimoPaiDoTipo.getToken().getColumn(), msg);
         }
-
-        if (token.getType() == TypeToken.PONTO_VIRGULA) return;
-
-        if (token.getType() != TypeToken.FECHA_PARENTESES) {
-            verificarVariavel(ultimoPaiDoTipo);
-            atrib.adicionar(this.token);
-        }
-        atribuicaoLogica(ultimoPaiDoTipo);
     }
 
     private boolean verificarTipo(Variavel ultimoPaiDoTipo) {
